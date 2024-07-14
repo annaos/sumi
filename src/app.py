@@ -7,6 +7,7 @@ import logging
 from core.get_chat_history import get_chat_history
 from core.save_message import save_message
 from core.summarize import summarize
+from config.common import HOURS_LIMIT
 
 load_dotenv()
 
@@ -47,10 +48,16 @@ def summarize_handler(update: Update, context: CallbackContext):
     try:
         messages = get_chat_history(chat_id, from_message_id)
 
-        if not messages or len(messages) == 0:
+        if messages == False:
+            update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % HOURS_LIMIT)
+            return
+
+        if len(messages) == 0:
             update.message.reply_text("No messages found to summarize. Most likely bot was just added to the chat.")
             return
-        
+
+        logger.info('Chat history: %s', messages)
+
     except Exception:
         update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
         logger.exception("Error while trying to retrieve the chat history.")
@@ -58,12 +65,13 @@ def summarize_handler(update: Update, context: CallbackContext):
 
     response_message = update.message.reply_text("Generating summary... Please wait.")
     summary_generator = summarize(messages)
+    logger.info("summary_generator %s", summary_generator)
 
-    for partial_response in summary_generator:
-        try:
-            response_message.edit_text(partial_response)
-        except Exception:
-            pass
+    try:
+        response_message.edit_text(summary_generator)
+    except Exception:
+        logger.exception("pass")
+        pass
 
 
 def error_handler(update: Update, context: CallbackContext):

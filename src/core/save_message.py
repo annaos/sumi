@@ -1,6 +1,7 @@
 import json
 import os
 from telegram import Message
+from datetime import datetime
 
 from config.common import HISTORY_SAVE_DIRECTORY
 
@@ -27,12 +28,14 @@ def save_message(message: Message, is_edited: bool):
             if not chat_history["chat_id"] or not chat_history["messages"]:
                 chat_history = {
                     "chat_id": chat_id,
+                    "last_call": datetime.now().isoformat(),
                     "messages": []
                 }
 
     except FileNotFoundError:
         chat_history = {
             "chat_id": chat_id,
+            "last_call": datetime.now().isoformat(),
             "messages": []
         }
 

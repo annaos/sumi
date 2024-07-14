@@ -1,8 +1,12 @@
 import json
 import ollama
+import logging
 
 from helpers.nano_to_seconds import nano_to_seconds
 from config.ollama import MODEL, SYSTEM_PROMPT
+
+logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def summarize(messages):
@@ -15,31 +19,37 @@ def summarize(messages):
         stream=True
     )
 
-    try:
-        response_content = ""
+    response_content = ""
+    metadata = "\n\n---\n\n"
 
+    try:
         for chunk in stream:
             response_chunk = chunk['response']
             is_done = chunk['done']
             response_content += response_chunk
 
-            metadata = "\n\n---\n\n"
-
             if is_done:
-                model = chunk['model']
-                total_duration_sec = nano_to_seconds(chunk['total_duration'])
-                load_duration_sec = nano_to_seconds(chunk['load_duration'])
-                prompt_eval_duration_sec = nano_to_seconds(chunk['prompt_eval_duration'])
-                eval_duration_sec = nano_to_seconds(chunk['eval_duration'])
+                if "model" in chunk:
+                    model = chunk['model']
+                    metadata += f"Model: {model}\n"
 
-                metadata += f"Model: {model}\n"
-                metadata += f"Total duration: {total_duration_sec:.2f} seconds\n"
-                metadata += f"Model load duration: {load_duration_sec:.2f} seconds\n"
-                metadata += f"Prompt evaluation duration: {prompt_eval_duration_sec:.2f} seconds\n"
-                metadata += f"Response evaluation duration: {eval_duration_sec:.2f} seconds"
-            else:
-                metadata += "Generating summary... Please wait."
+                if "total_duration" in chunk:
+                    total_duration_sec = nano_to_seconds(chunk['total_duration'])
+                    metadata += f"Total duration: {total_duration_sec:.2f} seconds\n"
 
-            yield response_content + metadata
+                if "load_duration" in chunk:
+                    load_duration_sec = nano_to_seconds(chunk['load_duration'])
+                    metadata += f"Model load duration: {load_duration_sec:.2f} seconds\n"
+
+                if "prompt_eval_duration" in chunk:
+                    prompt_eval_duration_sec = nano_to_seconds(chunk['prompt_eval_duration'])
+                    metadata += f"Prompt evaluation duration: {prompt_eval_duration_sec:.2f} seconds\n"
+
+                if "eval_duration" in chunk:
+                    eval_duration_sec = nano_to_seconds(chunk['eval_duration'])
+                    metadata += f"Response evaluation duration: {eval_duration_sec:.2f} seconds"
+
+        return response_content + metadata
     except Exception:
-        yield "An error occurred while generating the summary."
+        logger.exception("An error occurred while generating the summary.")
+        return "An error occurred while generating the summary." + response_content
