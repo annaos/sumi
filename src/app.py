@@ -1,13 +1,16 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from telegram import Update
 from dotenv import load_dotenv
+from datetime import datetime
 import os
 import logging
 
-from core.get_chat_history import get_chat_history
+from core.get_chat_history import get_chat_history_by_message_id, get_chat_history_by_timestamp
 from core.save_message import save_message
+from core.statistic import create_statistic, create_header
 from core.summarize import summarize
 from config.common import HOURS_LIMIT
+from helpers.text_to_timedelta import text_to_timedelta
 
 load_dotenv()
 
@@ -29,6 +32,26 @@ def message_handler(update: Update, context: CallbackContext):
     save_message(message, is_edited)
 
 
+def chart_handler(update: Update, context: CallbackContext):
+    chat_id = update.message.chat_id
+    time_str = update.message.text.replace('/stats', '').strip()
+    delta = text_to_timedelta(time_str)
+
+    timestamp = (datetime.now() - delta).isoformat()
+    try:
+        messages = get_chat_history_by_timestamp(chat_id, timestamp)
+        logger.info('Chat history: %s', messages)
+    except Exception:
+        logger.exception("Error while trying to retrieve the chat history.")
+        return
+
+    chart_text = create_header(delta)
+    chart_text += create_statistic(messages)
+    logger.info("chart_text %s", chart_text)
+
+    update.message.reply_text(chart_text)
+
+
 def summarize_handler(update: Update, context: CallbackContext):
     """
     Generate a summary of the chat history.
@@ -46,7 +69,7 @@ def summarize_handler(update: Update, context: CallbackContext):
     from_message_id = update.message.reply_to_message.message_id
 
     try:
-        messages = get_chat_history(chat_id, from_message_id)
+        messages = get_chat_history_by_message_id(chat_id, from_message_id)
 
         if messages == False:
             update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % HOURS_LIMIT)
@@ -92,7 +115,10 @@ def main():
 
     dp = updater.dispatcher
     dp.add_handler(MessageHandler(Filters.text & (~Filters.command), message_handler))
+    dp.add_handler(CommandHandler("sum", summarize_handler))
     dp.add_handler(CommandHandler("summarize", summarize_handler))
+    dp.add_handler(CommandHandler("stats", chart_handler))
+    dp.add_handler(CommandHandler("statt", chart_handler))
     dp.add_error_handler(error_handler)
 
     updater.start_polling()

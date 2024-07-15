@@ -3,7 +3,7 @@ import os
 from telegram import Message
 from datetime import datetime
 
-from config.common import HISTORY_SAVE_DIRECTORY
+from src.config.common import HISTORY_SAVE_DIRECTORY
 
 
 def save_message(message: Message, is_edited: bool):
@@ -17,6 +17,7 @@ def save_message(message: Message, is_edited: bool):
 
     message_data = {
         "message_id": message_id,
+        "timestamp": datetime.now().isoformat(),
         "sender": sender,
         "message": message_text
     }
