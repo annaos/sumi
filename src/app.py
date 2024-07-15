@@ -9,7 +9,7 @@ from core.get_chat_history import get_chat_history_by_message_id, get_chat_histo
 from core.save_message import save_message
 from core.statistic import create_statistic, create_header
 from core.summarize import summarize
-from config.common import HOURS_LIMIT
+from config.common import SUMMARY_HOURS_LIMIT
 from helpers.text_to_timedelta import text_to_timedelta
 
 load_dotenv()
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 async def message_handler(update: Update, context: CallbackContext) -> None:
     """
     Save the message to the chat history.
-    
+
     This function is called when the user sends a message.
     It saves the message to the chat history file.
     """
@@ -39,14 +39,13 @@ async def chart_handler(update: Update, context: CallbackContext) -> None:
 
     timestamp = (datetime.now() - delta).isoformat()
     try:
-        messages = get_chat_history_by_timestamp(chat_id, timestamp)
-        logger.info('Chat history: %s', messages)
+        (messages, words) = get_chat_history_by_timestamp(chat_id, timestamp)
     except Exception:
         logger.exception("Error while trying to retrieve the chat history.")
         return
 
     chart_text = create_header(delta)
-    chart_text += create_statistic(messages)
+    chart_text += create_statistic(messages, words)
     logger.info("chart_text %s", chart_text)
 
     await update.message.reply_text(chart_text)
@@ -62,7 +61,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
     """
 
     if not update.message.reply_to_message:
-        await update.message.reply_text("Please reply to a message with the /summarize command to get a brief summary of the messages sent after it.")
+        await update.message.reply_text("Please reply to a message with the /sum command to get a brief summary of the messages sent after it.")
         return
     
     chat_id = update.message.chat_id
@@ -72,21 +71,19 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
         messages = get_chat_history_by_message_id(chat_id, from_message_id)
 
         if messages == False:
-            await update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % HOURS_LIMIT)
+            await update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % SUMMARY_HOURS_LIMIT)
             return
 
         if len(messages) == 0:
             await update.message.reply_text("No messages found to summarize. Most likely bot was just added to the chat.")
             return
 
-        logger.info('Chat history: %s', messages)
-
     except Exception:
         await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
         logger.exception("Error while trying to retrieve the chat history.")
         return
 
-    response_message = update.message.reply_text("Generating summary... Please wait.")
+    response_message = await update.message.reply_text("Generating summary... Please wait.")
     summary_generator = summarize(messages)
     logger.info("summary_generator %s", summary_generator)
 

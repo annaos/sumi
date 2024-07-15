@@ -1,7 +1,8 @@
 import json
+import re
 from datetime import datetime, timedelta
 
-from config.common import HISTORY_SAVE_DIRECTORY, HOURS_LIMIT
+from config.common import HISTORY_SAVE_DIRECTORY, CLEAN_FREQUENCY_HOURS
 
 def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
     messages = ""
@@ -12,7 +13,7 @@ def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
         timestamp = datetime.fromisoformat(chat_history["last_call"])
 
         time_diff = datetime.now() - timestamp
-        if time_diff < timedelta(hours=HOURS_LIMIT):
+        if time_diff < timedelta(hours=CLEAN_FREQUENCY_HOURS):
             return False
 
         for message in chat_history["messages"]:
@@ -26,6 +27,7 @@ def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
 
 def get_chat_history_by_timestamp(chat_id: int, timestamp: str):
     messages_count = {}
+    words_count = {}
     file_name = f'{HISTORY_SAVE_DIRECTORY}/chat_history_{str(chat_id)}.json'
 
     with open(file_name, 'r') as file:
@@ -37,10 +39,15 @@ def get_chat_history_by_timestamp(chat_id: int, timestamp: str):
 
             if message["sender"] in messages_count:
                 messages_count[message["sender"]] += 1
+                words_count[message["sender"]] += count_words(message["message"])
             else:
                 messages_count[message["sender"]] = 1
+                words_count[message["sender"]] = count_words(message["message"])
 
-    return messages_count
+    return (messages_count, words_count)
+
+def count_words(s: str):
+    return len(re.findall(r'\w+', s.strip()))
 
 def updateLastCall(chat_history, file_name):
     chat_history["last_call"] = datetime.now().isoformat()

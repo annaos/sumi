@@ -2,7 +2,7 @@ def create_header(delta):
     return "Статистика за последние %s часа\n" % (str(delta))
 
 
-def create_statistic(messages):
+def create_statistic(messages, words):
     if len(messages) == 0:
         return "Никто ничего не написал."
 
@@ -10,7 +10,14 @@ def create_statistic(messages):
 
     statistic = ""
     place = 1
+    (min, max) = get_extremum(messages, words)
     for user, count in sorted_messages.items():
+        if user == min:
+            statistic +='\U0001F64A'
+
+        if user == max:
+            statistic +='\U0001F485'
+
         if place == 1:
             statistic +='\U0001F947'
         if place == 2:
@@ -26,7 +33,22 @@ def create_statistic(messages):
         else:
             statistic += "%s: %d сообщений" % (user, count)
 
+        statistic += " (%d слов)" % (words[user])
         statistic +='\n'
         place += 1
 
     return statistic
+
+def get_extremum(messages, words):
+    minName = maxName = ""
+    min = max = 0
+    for user, count in messages.items():
+        c = words[user] / count
+        if max < c:
+            max = c
+            maxName = user
+        if min == 0 or min > c:
+            min = c
+            minName = user
+
+    return (minName, maxName)

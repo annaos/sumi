@@ -3,18 +3,20 @@ import ollama
 import logging
 
 from helpers.nano_to_seconds import nano_to_seconds
-from config.ollama import MODEL, SYSTEM_PROMPT
+from config.ollama import MODEL, SYSTEM_PROMPT, SUM_PROMPT
 
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def summarize(messages):
-    messages_json = json.dumps(messages, indent=4, ensure_ascii=False)
+    messages_prompt = SUM_PROMPT + messages
+
+    logger.info('prompt: %s', messages_prompt)
 
     stream = ollama.generate(
         model=MODEL,
-        prompt=messages_json,
+        prompt=messages_prompt,
         system=SYSTEM_PROMPT,
         stream=True
     )
