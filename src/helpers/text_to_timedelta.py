@@ -1,7 +1,7 @@
 from pytimeparse.timeparse import timeparse
 from datetime import timedelta
 
-from src.config.common import STATISTIC_HOURS
+from config.common import STATISTIC_HOURS
 
 def text_to_timedelta(text):
     delta = timedelta(hours=STATISTIC_HOURS)

@@ -9,12 +9,11 @@ def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
 
     with open(file_name, 'r') as file:
         chat_history = json.load(file)
-        if "last_call" in chat_history: #TODO remove after all existed files have last_call
-            timestamp = datetime.fromisoformat(chat_history["last_call"])
+        timestamp = datetime.fromisoformat(chat_history["last_call"])
 
-            time_diff = datetime.now() - timestamp
-            if time_diff < timedelta(hours=HOURS_LIMIT):
-                return False
+        time_diff = datetime.now() - timestamp
+        if time_diff < timedelta(hours=HOURS_LIMIT):
+            return False
 
         for message in chat_history["messages"]:
             if (message["message_id"] < from_message_id):

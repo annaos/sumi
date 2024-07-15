@@ -3,7 +3,7 @@ import os
 from telegram import Message
 from datetime import datetime
 
-from src.config.common import HISTORY_SAVE_DIRECTORY
+from config.common import HISTORY_SAVE_DIRECTORY
 
 
 def save_message(message: Message, is_edited: bool):
