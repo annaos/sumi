@@ -1,8 +1,13 @@
+import re
+
 def create_header(delta):
+    if delta is None:
+        return "Статистика после указанного сообщения\n"
     return "Статистика за последние %s часа\n" % (str(delta))
 
 
-def create_statistic(messages, words):
+def create_statistic(chat_history):
+    (messages, words) = _convert_history(chat_history)
     if len(messages) == 0:
         return "Никто ничего не написал."
 
@@ -10,7 +15,7 @@ def create_statistic(messages, words):
 
     statistic = ""
     place = 1
-    (min, max) = get_extremum(messages, words)
+    (min, max) = _get_extremum(messages, words)
     for user, count in sorted_messages.items():
         if user == min:
             statistic +='\U0001F64A'
@@ -39,7 +44,27 @@ def create_statistic(messages, words):
 
     return statistic
 
-def get_extremum(messages, words):
+
+def _convert_history(chat_history):
+    messages_count = {}
+    words_count = {}
+
+    for message in chat_history["messages"]:
+        if message["sender"] in messages_count:
+            messages_count[message["sender"]] += 1
+            words_count[message["sender"]] += _count_words(message["message"])
+        else:
+            messages_count[message["sender"]] = 1
+            words_count[message["sender"]] = _count_words(message["message"])
+
+    return (messages_count, words_count)
+
+
+def _count_words(s: str):
+    return len(re.findall(r'\w+', s.strip()))
+
+
+def _get_extremum(messages, words):
     minName = maxName = ""
     min = max = 0
     for user, count in messages.items():

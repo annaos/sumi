@@ -29,31 +29,32 @@ def save_message(message: Message, is_edited: bool):
     except FileNotFoundError:
         chat_history = {
             "chat_id": chat_id,
-            "last_call": datetime.now().isoformat(),
+            "summary_created_at": datetime.now().isoformat(),
             "cleaned_at": datetime.now().isoformat(),
             "messages": []
         }
 
     if is_edited:
-        chat_history["messages"] = replaceMessage(chat_history["messages"], message_data)
+        chat_history["messages"] = _replace_message(chat_history["messages"], message_data)
     else:
         chat_history["messages"].append(message_data)
 
     limit = (datetime.now() - timedelta(hours=CLEAN_FREQUENCY_HOURS)).isoformat()
     if not "cleaned_at" in chat_history or chat_history["cleaned_at"] < limit:
-        chat_history = cleanHistory(chat_history)
+        chat_history = _clean_history(chat_history)
     with open(file_name, 'w') as file:
         json.dump(chat_history, file, ensure_ascii=False, indent=2)
 
 
-def replaceMessage(messages, updated_message):
+def _replace_message(messages, updated_message):
     for i in range(len(messages)):
         if messages[i]["message_id"] == updated_message["message_id"]:
             messages[i] = updated_message
             break
     return messages
 
-def cleanHistory(chat_history):
+
+def _clean_history(chat_history):
     messages = chat_history["messages"]
     limit = (datetime.now() - timedelta(days=CLEAN_LIMIT_DAYS)).isoformat()
 

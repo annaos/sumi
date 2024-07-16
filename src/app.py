@@ -1,16 +1,16 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from telegram import Update
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import logging
 
-from core.get_chat_history import get_chat_history_by_message_id, get_chat_history_by_timestamp
+from core.get_chat_history import get_chat_history_by_timestamp, get_chat_history_by_message_id, updateLastCall
 from core.save_message import save_message
 from core.statistic import create_statistic, create_header
 from core.summarize import summarize
 from config.common import SUMMARY_HOURS_LIMIT
-from helpers.text_to_timedelta import text_to_timedelta
+from helpers.util import get_boundary
 
 load_dotenv()
 
@@ -19,89 +19,68 @@ logger = logging.getLogger(__name__)
 
 
 async def message_handler(update: Update, context: CallbackContext) -> None:
-    """
-    Save the message to the chat history.
-
-    This function is called when the user sends a message.
-    It saves the message to the chat history file.
-    """
-
     is_edited = update.edited_message is not None
     message = update.edited_message if is_edited else update.message
-
     save_message(message, is_edited)
 
 
-async def chart_handler(update: Update, context: CallbackContext) -> None:
+async def stats_handler(update: Update, context: CallbackContext) -> None:
+    (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
-    time_str = update.message.text.replace('/stats', '').strip()
-    delta = text_to_timedelta(time_str)
 
-    timestamp = (datetime.now() - delta).isoformat()
     try:
-        (messages, words) = get_chat_history_by_timestamp(chat_id, timestamp)
+        if not message_id is None:
+            chat_history = get_chat_history_by_message_id(chat_id, message_id)
+        else:
+            timestamp = (datetime.now() - delta).isoformat()
+            chat_history = get_chat_history_by_timestamp(chat_id, timestamp)
     except Exception:
         logger.exception("Error while trying to retrieve the chat history.")
         return
 
-    chart_text = create_header(delta)
-    chart_text += create_statistic(messages, words)
-    logger.info("chart_text %s", chart_text)
+    stats_text = create_header(delta)
+    stats_text += create_statistic(chat_history)
+    logger.info("stats_text %s", stats_text)
 
-    await update.message.reply_text(chart_text)
+    await update.message.reply_text(stats_text)
 
 
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
-    """
-    Generate a summary of the chat history.
-
-    This function is called when the user sends the /summary command.
-    It retrieves the chat history and sends it to the summarization model.
-    Then, it sends the generated summary to the chat.
-    """
-
-    if not update.message.reply_to_message:
-        await update.message.reply_text("Please reply to a message with the /sum command to get a brief summary of the messages sent after it.")
-        return
-    
+    (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
-    from_message_id = update.message.reply_to_message.message_id
 
     try:
-        messages = get_chat_history_by_message_id(chat_id, from_message_id)
-
-        if messages == False:
-            await update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % SUMMARY_HOURS_LIMIT)
-            return
-
-        if len(messages) == 0:
-            await update.message.reply_text("No messages found to summarize. Most likely bot was just added to the chat.")
-            return
-
+        if not message_id is None:
+            chat_history = get_chat_history_by_message_id(chat_id, message_id)
+        else:
+            timestamp = (datetime.now() - delta).isoformat()
+            chat_history = get_chat_history_by_timestamp(chat_id, timestamp)
     except Exception:
-        await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
         logger.exception("Error while trying to retrieve the chat history.")
+        await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
+        return
+
+    time_diff = datetime.now() - datetime.fromisoformat(chat_history["summary_created_at"])
+    if time_diff < timedelta(hours=SUMMARY_HOURS_LIMIT):
+        await update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % SUMMARY_HOURS_LIMIT)
+        return
+
+    if len(chat_history["messages"]) == 0:
+        await update.message.reply_text("No messages found to summarize.")
         return
 
     response_message = await update.message.reply_text("Generating summary... Please wait.")
-    summary_generator = summarize(messages)
-    logger.info("summary_generator %s", summary_generator)
-
     try:
-        await response_message.edit_text(summary_generator)
+        summary_generator = summarize(chat_history)
+        logger.info("summary_generator %s", summary_generator)
+        updateLastCall(chat_id)
     except Exception:
-        logger.exception("pass")
-        pass
+        logger.exception("An error occurred while generating the summary.")
+        summary_generator = "An error occurred while generating the summary."
 
+    await response_message.edit_text(summary_generator)
 
 def error_handler(update: Update, context: CallbackContext):
-    """
-    Log the error.
-
-    This function is called when an error occurs.
-    It logs the error to the console.
-    """
-
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
@@ -113,8 +92,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), message_handler))
     app.add_handler(CommandHandler("sum", summarize_handler))
     app.add_handler(CommandHandler("summarize", summarize_handler))
-    app.add_handler(CommandHandler("stats", chart_handler))
-    app.add_handler(CommandHandler("statt", chart_handler))
+    app.add_handler(CommandHandler("stats", stats_handler))
+    app.add_handler(CommandHandler("statt", stats_handler))
     app.add_error_handler(error_handler)
 
     app.run_polling()
