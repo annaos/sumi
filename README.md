@@ -6,26 +6,32 @@
 
 <p><strong>A Telegram bot that summarizes messages from a chat.</strong></p>
 
-> Developed by [Oleksandr Dudynets](https://dudynets.dev)
+> Based on development of [Oleksandr Dudynets](https://dudynets.dev)
+> 
+> https://github.com/dudynets/Telegram-Summarize-Bot
+
 
 ## Overview
 
 When you add the bot to a chat, it start listening to all text messages and save them to a history file.
-Then, when any user replies to some message with the command `/summarize`, the bot will summarize all messages that were sent since the replied message.
+Then, when any user replies to some message with the command `/summarize` or `/sum`, 
+the bot will summarize all messages that were sent since the replied message. 
+Alternatively, you can use time arguments, e.g. `/sum 1h` the bot will summarise all messages sent in the last hour.
+
+You can also generate the statistics using the `/stats` or `/stat` command. 
+Here you can also do it for last time or since the replied message.
 
 ## Getting Started
 
 ### Prerequisites
 
 - [Python](https://www.python.org/)
-- [Ollama](https://ollama.com/)
-- [Compatible model from Ollama's library](https://ollama.com/library) (e.g. `llama2:13b`)
 
 ### Installation and Usage
 
 1. Clone the repository
    ```sh
-   git clone https://github.com/dudynets/Telegram-Summarize-Bot
+   git clone git@gitlab.ichbins.net:anna/sumi.git
    ```
 2. Install the required packages
    ```sh
@@ -34,6 +40,7 @@ Then, when any user replies to some message with the command `/summarize`, the b
 3. Create a `.env` file in the root directory and add the following environment variables:
    ```env
    TELEGRAM_BOT_TOKEN=<your-telegram-bot-token>
+   OPENAI_TOKEN=<your-openai-token>
    ```
 4. Run the bot
    ```sh
