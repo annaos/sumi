@@ -11,7 +11,7 @@ from core.new_message import new_random_message
 from core.statistic import create_statistic
 from core.summarize import summarize
 from core.felix_special import answer_felix
-from config.common import SUMMARY_HOURS_LIMIT
+from config.common import SUMMARY_HOURS_LIMIT, VERSION
 from helpers.util import get_boundary, get_time_delta
 
 load_dotenv()
@@ -52,6 +52,10 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
     logger.info("stats_text %s", stats_text)
 
     await update.message.reply_text(stats_text)
+
+
+async def version_handler(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text("My version is: " + VERSION)
 
 
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
@@ -104,6 +108,7 @@ def main():
     app.add_handler(CommandHandler("summarize", summarize_handler))
     app.add_handler(CommandHandler("stats", stats_handler))
     app.add_handler(CommandHandler("statt", stats_handler))
+    app.add_handler(CommandHandler("version", version_handler))
     app.add_error_handler(error_handler)
 
     app.run_polling()
