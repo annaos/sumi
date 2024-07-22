@@ -1,19 +1,19 @@
 import re
 
-def create_header(delta):
+def _create_header(delta):
     if delta is None:
-        return "Статистика после указанного сообщения\n"
-    return "Статистика за последние %s часа\n" % (str(delta))
+        return "Статистика после указанного сообщения\n\n"
+    return "Статистика за последние %s часа\n\n" % (str(delta))
 
 
-def create_statistic(chat_history):
+def create_statistic(chat_history, delta):
+    statistic = _create_header(delta)
     (messages, words) = _convert_history(chat_history)
     if len(messages) == 0:
-        return "Никто ничего не написал."
+        return statistic + "Никто ничего не написал."
 
     sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1], reverse=True)}
 
-    statistic = ""
     place = 1
     (min, max) = _get_extremum(messages, words)
     for user, count in sorted_messages.items():

@@ -1,8 +1,11 @@
 from pytimeparse.timeparse import timeparse
-from datetime import timedelta
+from datetime import timedelta, datetime
+import os
+import logging
 
-from config.common import STATISTIC_HOURS
 from telegram import Message
+from config.common import AI_MODEL, STATISTIC_HOURS
+import openai
 
 
 def get_boundary(reply_to_message: Message, args):
@@ -18,12 +21,29 @@ def get_boundary(reply_to_message: Message, args):
 
     return (None, delta)
 
-def _text_to_timedelta(text):
-    delta = timedelta(hours=STATISTIC_HOURS)
+def get_time_delta(chat_history):
     try:
-        t = timeparse(text)
-        delta = timedelta(seconds=t)
-    except Exception:
-        pass
+        delta = datetime.now() - datetime.fromisoformat(chat_history["messages"][0]["timestamp"])
+        return timedelta(delta.days, delta.seconds)
+    except:
+        return None
 
-    return delta
+
+def ask_ai(system, promt):
+    openai.api_key = os.getenv('OPENAI_TOKEN')
+    completion = openai.chat.completions.create(
+        model=AI_MODEL,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": promt}
+        ]
+    )
+    logger = get_logger()
+    logger.info(completion)
+
+    return completion
+
+
+def get_logger():
+    logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    return logging.getLogger(__name__)

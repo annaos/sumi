@@ -1,4 +1,4 @@
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes
 from telegram import Update
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -7,14 +7,18 @@ import logging
 
 from core.get_chat_history import get_chat_history_by_timestamp, get_chat_history_by_message_id, updateLastCall
 from core.save_message import save_message
-from core.statistic import create_statistic, create_header
+from core.new_message import new_random_message
+from core.statistic import create_statistic
 from core.summarize import summarize
+from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT
-from helpers.util import get_boundary
+from helpers.util import get_boundary, get_time_delta
 
 load_dotenv()
 
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +26,11 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
     is_edited = update.edited_message is not None
     message = update.edited_message if is_edited else update.message
     save_message(message, is_edited)
+    new_random_message(update.effective_message.chat_id, context)
+
+    answer = answer_felix(message, is_edited)
+    if answer:
+        await update.message.reply_chat_action(answer, message.message_id)
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
@@ -31,6 +40,7 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
     try:
         if not message_id is None:
             chat_history = get_chat_history_by_message_id(chat_id, message_id)
+            delta = get_time_delta(chat_history)
         else:
             timestamp = (datetime.now() - delta).isoformat()
             chat_history = get_chat_history_by_timestamp(chat_id, timestamp)
@@ -38,8 +48,7 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         logger.exception("Error while trying to retrieve the chat history.")
         return
 
-    stats_text = create_header(delta)
-    stats_text += create_statistic(chat_history)
+    stats_text = create_statistic(chat_history, delta)
     logger.info("stats_text %s", stats_text)
 
     await update.message.reply_text(stats_text)
@@ -52,6 +61,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
     try:
         if not message_id is None:
             chat_history = get_chat_history_by_message_id(chat_id, message_id)
+            delta = get_time_delta(chat_history)
         else:
             timestamp = (datetime.now() - delta).isoformat()
             chat_history = get_chat_history_by_timestamp(chat_id, timestamp)
@@ -71,7 +81,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
 
     response_message = await update.message.reply_text("Generating summary... Please wait.")
     try:
-        summary_generator = summarize(chat_history)
+        summary_generator = summarize(chat_history, delta)
         logger.info("summary_generator %s", summary_generator)
         updateLastCall(chat_id)
     except Exception:
