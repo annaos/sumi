@@ -25,7 +25,6 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-
 async def message_handler(update: Update, context: CallbackContext) -> None:
     is_edited = update.edited_message is not None
     message = update.edited_message if is_edited else update.message
@@ -38,6 +37,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask stats_handler with update %s", update)
     (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
 
@@ -53,16 +53,17 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         return
 
     stats_text = create_statistic(chat_history, delta)
-    logger.info("Statistic text: %s", stats_text)
 
     await update.message.reply_text(stats_text)
 
 
 async def version_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask version_handler with update %s", update)
     await update.message.reply_text("My version is: " + VERSION)
 
 
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask summarize_handler with update %s", update)
     (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
 
@@ -112,6 +113,7 @@ def main():
     app.add_handler(CommandHandler("stats", stats_handler))
     app.add_handler(CommandHandler("statt", stats_handler))
     app.add_handler(CommandHandler("version", version_handler))
+    app.add_handler(CommandHandler("v", version_handler))
     app.add_error_handler(error_handler)
 
     app.run_polling()
