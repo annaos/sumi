@@ -1,10 +1,10 @@
 from telegram import Message
 
-from config.common import FELIX_ANSWER_FREQUENCY
+from config.common import FELIX_ANSWER_FREQUENCY, FELIX_ANSWER_NAME
 from helpers.util import ask_ai
 
 def answer_felix(message: Message, is_edited: bool):
-    if is_edited == False and message.from_user.full_name == "Felix":
+    if is_edited == False and message.from_user.full_name == FELIX_ANSWER_NAME:
         if message.message_id % FELIX_ANSWER_FREQUENCY == 0:
             return _generate_answer(message.text)
     return None

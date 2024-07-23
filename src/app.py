@@ -30,7 +30,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
 
     answer = answer_felix(message, is_edited)
     if answer:
-        await update.message.reply_chat_action(answer, message.message_id)
+        await update.message.reply_text(answer)
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
