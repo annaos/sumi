@@ -1,9 +1,16 @@
+import logging
+logging.basicConfig(filename='app.log',
+    format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S',
+    level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
+
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes
 from telegram import Update
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
-import logging
 
 from core.get_chat_history import get_chat_history_by_timestamp, get_chat_history_by_message_id, updateLastCall
 from core.save_message import save_message
@@ -16,9 +23,6 @@ from helpers.util import get_boundary, get_time_delta
 
 load_dotenv()
 
-logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +53,7 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         return
 
     stats_text = create_statistic(chat_history, delta)
-    logger.info("stats_text %s", stats_text)
+    logger.info("Statistic text: %s", stats_text)
 
     await update.message.reply_text(stats_text)
 
@@ -86,7 +90,6 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
     response_message = await update.message.reply_text("Generating summary... Please wait.")
     try:
         summary_generator = summarize(chat_history, delta)
-        logger.info("summary_generator %s", summary_generator)
         updateLastCall(chat_id)
     except Exception:
         logger.exception("An error occurred while generating the summary.")
