@@ -1,4 +1,4 @@
 python-dotenv==1.0.1
-python-telegram-bot==21.4
+python-telegram-bot[job-queue]==21.4
 pytimeparse==1.1.8
 openai==1.35.13
