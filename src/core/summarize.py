@@ -5,18 +5,28 @@ from helpers.util import ask_ai
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SUMMARY_SYSTEM_PROMPT = f"""
+SUMMARY_SYSTEM_PROMPT = """
 You are a helpful AI assistant that summarizes the chat messages.
 Do your best to provide a helpful summary of what was discussed in the provided chat messages.
 
-Reply with a several short paragraphs summarizing what are the main points of the chat messages in russian. Indicate who has what point of view.
+Reply with a several short paragraphs summarizing what are the main points of the chat messages in russian.
+"""
+
+SHORT_SUMMARY_SYSTEM_PROMPT = """
+You are a helpful AI assistant that summarizes the chat messages.
+Do your best to provide a helpful summary of what was discussed in the provided chat messages.
+
+Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
 """
 
 def summarize(chat_history, delta):
     messages_prompt = _generate_promt(chat_history)
+    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
+    if len(chat_history["messages"]) > 150:
+        system_promt = SUMMARY_SYSTEM_PROMPT
     # logger.info('prompt: %s', messages_prompt)
 
-    completion = ask_ai(SUMMARY_SYSTEM_PROMPT, messages_prompt)
+    completion = ask_ai(system_promt, messages_prompt)
 
     response_content = completion.choices[0].message.content
     metadata = "\n\n---\n\n"
