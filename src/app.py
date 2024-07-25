@@ -1,6 +1,5 @@
 import logging
-logging.basicConfig(filename='app.log',
-    format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%H:%M:%S',
     level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)

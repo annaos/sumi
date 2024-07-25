@@ -18,7 +18,6 @@ def new_random_message(chat_id, context: CallbackContext):
     if _is_time_at_night(datetime.now() + due):
         due = _get_due_till_morning(datetime.now())
     context.job_queue.run_once(alarm, due, chat_id=chat_id, name=str(chat_id))
-    logger.info("Next due delta is in %s", due)
 
 
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
