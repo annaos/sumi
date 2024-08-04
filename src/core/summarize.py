@@ -7,9 +7,9 @@ logger = logging.getLogger(__name__)
 
 SUMMARY_SYSTEM_PROMPT = """
 You are a helpful AI assistant that summarizes the chat messages.
-Do your best to provide a helpful summary of what was discussed in the provided chat messages.
-
-Reply with a several short paragraphs summarizing what are the main points of the chat messages in russian.
+Please identify and summarize the main discussion points from the provided chat messages. 
+For each discussion point, create a brief paragraph that clearly and concisely captures the essence of the conversation. 
+Focus on delivering a clear and accurate overview of what was discussed in russian.
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
@@ -21,9 +21,9 @@ Reply with a short paragraph summarizing what are the main points of the chat me
 
 def summarize(chat_history, delta):
     messages_prompt = _generate_promt(chat_history)
-    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
-    if len(chat_history["messages"]) > 150:
-        system_promt = SUMMARY_SYSTEM_PROMPT
+    system_promt = SUMMARY_SYSTEM_PROMPT
+    #if len(chat_history["messages"]) < 150:
+    #    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
     # logger.info('prompt: %s', messages_prompt)
 
     completion = ask_ai(system_promt, messages_prompt)

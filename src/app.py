@@ -28,11 +28,12 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
     is_edited = update.edited_message is not None
     message = update.edited_message if is_edited else update.message
     save_message(message, is_edited)
-    new_random_message(update.effective_message.chat_id, context)
 
     answer = answer_felix(message, is_edited)
     if answer:
         await update.message.reply_text(answer)
+    else:
+        new_random_message(update.effective_message.chat_id, message, context)
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:

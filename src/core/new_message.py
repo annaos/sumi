@@ -2,13 +2,14 @@ import logging
 from datetime import datetime,timedelta, time
 
 from telegram.ext import CallbackContext, ContextTypes
+from telegram import Message
 
 from config.common import NEW_MESSAGE_MINUTES
 from helpers.util import ask_ai
 
 logger = logging.getLogger(__name__)
 
-def new_random_message(chat_id, context: CallbackContext):
+def new_random_message(chat_id, message: Message, context: CallbackContext):
     current_jobs = context.job_queue.get_jobs_by_name(str(chat_id))
     if current_jobs:
         for job in current_jobs:
@@ -17,15 +18,24 @@ def new_random_message(chat_id, context: CallbackContext):
     due = timedelta(minutes=NEW_MESSAGE_MINUTES)
     if _is_time_at_night(datetime.now() + due):
         due = _get_due_till_morning(datetime.now())
-    context.job_queue.run_once(alarm, due, chat_id=chat_id, name=str(chat_id))
+    context.job_queue.run_once(alarm, due, chat_id=chat_id, name=str(chat_id), data=message)
 
 
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
-    await context.bot.send_message(job.chat_id, text=_generate_random_message())
+    message = job.data
+    await context.bot.send_message(job.chat_id, text=_generate_joke_message(message.from_user.first_name, message.text))
 
 
-def _generate_random_message():
+def _generate_joke_message(sender: str, message: str):
+    sytem = f"Ты — участник дискуссионного чата. Придумай короткий остроумный ответ на сообщение участника чата {sender}."
+
+    completion = ask_ai(sytem, message)
+
+    return completion.choices[0].message.content
+
+# generate only joke messages at the moment
+def _generate_new_theme_message():
     system = "Ты — участник дискуссионного чата."
     promt = "Придумай тему для горячей дискуссии. Укажи тему словами \"А что вы думаете насчёт\", а затем очень коротко выскажи свою провокативную точку зрения на неё."
 
