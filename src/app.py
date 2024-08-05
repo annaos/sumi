@@ -113,6 +113,7 @@ def main():
     app.add_handler(CommandHandler("summarize", summarize_handler))
     app.add_handler(CommandHandler("stats", stats_handler))
     app.add_handler(CommandHandler("statt", stats_handler))
+    app.add_handler(CommandHandler("stat", stats_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
     app.add_error_handler(error_handler)
