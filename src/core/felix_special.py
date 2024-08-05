@@ -1,21 +1,13 @@
 from telegram import Message
 
-from config.common import FELIX_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY, FELIX_ANSWER_NAME
-from helpers.util import ask_ai
+from config.common import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY
+from helpers.util import generate_joke_message, is_active_participant
 
 def answer_felix(message: Message, is_edited: bool):
     if is_edited == True:
         return None
-    if message.from_user.full_name == FELIX_ANSWER_NAME and message.message_id % FELIX_ANSWER_FREQUENCY == 0:
-        return _generate_answer("Марика", message.text)
-    if message.message_id % ALL_ANSWER_FREQUENCY == 0:
-        return _generate_answer(message.from_user.first_name, message.text)
+    is_active_message = is_active_participant(message.from_user.full_name) and message.message_id % ACTIVE_ANSWER_FREQUENCY == 0
+    is_lucky_message = message.message_id % ALL_ANSWER_FREQUENCY == 0
+    if is_active_message or is_lucky_message:
+        return generate_joke_message(message.from_user.first_name, message.text)
     return None
-
-
-def _generate_answer(sender: str, message: str):
-    sytem = f"Ты участник дискуссионного чата. Придумай краткий и остроумный ответ на сообщение от {sender}."
-
-    completion = ask_ai(sytem, message)
-
-    return completion.choices[0].message.content

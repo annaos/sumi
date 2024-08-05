@@ -44,6 +44,45 @@ def ask_ai(system, promt):
     return completion
 
 
+def generate_joke_message(sender: str, message: str):
+    sender = sender_dictionary(sender)
+    sytem = f"Ты участник дискуссионного чата. Придумай краткий и остроумный ответ на сообщение участника чата по имени {sender}."
+
+    completion = ask_ai(sytem, message)
+
+    return completion.choices[0].message.content
+
+
+def is_active_chat(chat_id: int) -> bool:
+    return str(chat_id) in os.getenv('ACTIVE_CHAT_IDS').split(",")
+
+
+def is_active_participant(name: str) -> bool:
+    return str(name) in os.getenv('ACTIVE_NAMES').split(",")
+
+
+def sender_dictionary(sender: str) -> str:
+    if sender == "Felix":
+        return "Феликс"
+    if sender == "Mark":
+        return "Марик"
+    if sender == "Tom Adler":
+        return "Артём"
+    if sender == "iVik":
+        return "Витя"
+    if sender == "Putyatina Tanja":
+        return "Таня"
+    if sender == "Cler":
+        return "Света"
+    if sender == "Elvira":
+        return "Эльвира"
+    if sender == "Lada":
+        return "Лада"
+    if sender == "Anna Os":
+        return "Аня"
+    return sender
+
+
 def get_logger():
     logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     return logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from telegram.ext import CallbackContext, ContextTypes
 from telegram import Message
 
 from config.common import NEW_MESSAGE_MINUTES
-from helpers.util import ask_ai
+from helpers.util import ask_ai, generate_joke_message
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +24,8 @@ def new_random_message(chat_id, message: Message, context: CallbackContext):
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
     message = job.data
-    await context.bot.send_message(job.chat_id, text=_generate_joke_message(message.from_user.first_name, message.text))
+    await context.bot.send_message(job.chat_id, text=generate_joke_message(message.from_user.first_name, message.text))
 
-
-def _generate_joke_message(sender: str, message: str):
-    sytem = f"Ты — участник дискуссионного чата. Придумай короткий остроумный ответ на сообщение участника чата {sender}."
-
-    completion = ask_ai(sytem, message)
-
-    return completion.choices[0].message.content
 
 # generate only joke messages at the moment
 def _generate_new_theme_message():
