@@ -12,7 +12,7 @@ def get_boundary(reply_to_message: Message, args):
     if reply_to_message:
         return (reply_to_message.message_id, None)
     try:
-        arg_str = ''.join(args)
+        (arg_str, _) = _divide_args(args)
         t = timeparse(arg_str)
         delta = timedelta(seconds=t)
     except Exception:
@@ -63,19 +63,25 @@ def is_active_participant(user: User) -> bool:
     return name in os.getenv('ACTIVE_NAMES').split(",") or username in os.getenv('ACTIVE_NAMES').split(",")
 
 
-def get_point(args) -> str:
+def get_point(args):
+    (_, point) = _divide_args(args)
+    return point
+
+
+def _divide_args(args):
     start = True
+    time = ""
     point = ""
     for arg in args:
         if arg[0].isdigit() and len(arg) > 1 and start:
+            time += arg + ' '
             continue
         else:
             start = False
         if start == False:
             point += arg + ' '
 
-    return point
-
+    return (time, point)
 
 def get_sender(user) -> str:
     sender = user.username
