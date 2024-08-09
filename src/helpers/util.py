@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 import os
 import logging
 
-from telegram import Message
+from telegram import Message, User
 from config.common import AI_MODEL, STATISTIC_HOURS
 import openai
 
@@ -44,8 +44,8 @@ def ask_ai(system, promt):
     return completion
 
 
-def generate_joke_message(sender: str, message: str):
-    sender = sender_dictionary(sender)
+def generate_joke_message(user, message: str):
+    sender = get_sender(user)
     sytem = f"Ты участник дискуссионного чата. Придумай краткий и остроумный ответ на сообщение участника чата по имени {sender}."
 
     completion = ask_ai(sytem, message)
@@ -57,30 +57,47 @@ def is_active_chat(chat_id: int) -> bool:
     return str(chat_id) in os.getenv('ACTIVE_CHAT_IDS').split(",")
 
 
-def is_active_participant(name: str) -> bool:
-    return str(name) in os.getenv('ACTIVE_NAMES').split(",")
+def is_active_participant(user: User) -> bool:
+    name = user.full_name
+    username = user.username
+    return name in os.getenv('ACTIVE_NAMES').split(",") or username in os.getenv('ACTIVE_NAMES').split(",")
 
 
-def sender_dictionary(sender: str) -> str:
-    if sender == "Felix":
+def get_point(args) -> str:
+    start = True
+    point = ""
+    for arg in args:
+        if arg[0].isdigit() and len(arg) > 1 and start:
+            continue
+        else:
+            start = False
+        if start == False:
+            point += arg + ' '
+
+    return point
+
+
+def get_sender(user) -> str:
+    sender = user.username
+    if sender == "naturalist":
         return "Феликс"
-    if sender == "Mark":
-        return "Марик"
-    if sender == "Tom Adler":
-        return "Артём"
-    if sender == "iVik":
-        return "Витя"
-    if sender == "Putyatina Tanja":
+    if sender == "tetianafast":
         return "Таня"
-    if sender == "Cler":
+    if sender == "shachtyor":
+        return "Марик"
+    if sender == "arty_name":
+        return "Артём"
+    if sender == "Smarteclaire":
         return "Света"
-    if sender == "Elvira":
+    if sender == "quasado":
         return "Эльвира"
-    if sender == "Lada":
+    if sender == "LadaReFa":
         return "Лада"
-    if sender == "Anna Os":
+    if sender == "anna_os":
         return "Аня"
-    return sender
+    if user.full_name == "iVik":
+        return "Витя"
+    return user.full_name
 
 
 def get_logger():

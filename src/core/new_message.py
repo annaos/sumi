@@ -24,7 +24,7 @@ def new_random_message(chat_id, message: Message, context: CallbackContext):
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
     message = job.data
-    await context.bot.send_message(job.chat_id, text=generate_joke_message(message.from_user.first_name, message.text))
+    await context.bot.send_message(job.chat_id, text=generate_joke_message(message.from_user, message.text))
 
 
 # generate only joke messages at the moment

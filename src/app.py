@@ -6,7 +6,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes
-from telegram import Update
+from telegram import Update, Chat
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
@@ -18,7 +18,7 @@ from core.statistic import create_statistic
 from core.summarize import summarize
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION
-from helpers.util import get_boundary, get_time_delta, is_active_chat
+from helpers.util import get_boundary, get_time_delta, is_active_chat, get_point
 
 load_dotenv()
 
@@ -29,7 +29,10 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
     message = update.edited_message if is_edited else update.message
     save_message(message, is_edited)
 
-    if is_active_chat(update.effective_message.chat_id):
+    if update.effective_chat.type == Chat.PRIVATE:
+        await update.message.forward(os.getenv("MY_CHAT_ID"))
+
+    if is_active_chat(update.effective_message.chat_id) and not is_edited:
         answer = answer_felix(message, is_edited)
         if answer:
             await update.message.reply_text(answer)
@@ -39,6 +42,10 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask stats_handler with update %s", update)
+    if update.message is None:
+        logger.info("No message provided. Possible edited message. Nothing done.")
+        return
+
     (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
 
@@ -57,6 +64,23 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
 
     await update.message.reply_text(stats_text)
 
+async def help_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask help_handler with update %s", update)
+    help_text = """
+Меня зовут Sumi. Я умею анализировать историю чата, где я состою. Я знаю следующие комманды:
+- /summarize (или просто /sum) — Я составлю краткое содержание сообщений за указанный период (не более 30 дней). Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
+- /stats — Предоставлю статистику по сообщениям за указанный период. Можно использовать как ответ на сообщение или указать временной промежуток. Если не указать, подведу статистику за последние 10 часов.
+- /version — Покажу текущую версию бота.
+
+В некоторых чатах я иногда шучу или подкалываю своих любимчиков. Если у вас есть идеи для меня, напишите мне лично.
+    
+Примеры команд:
+/summarize 5d Эльвира
+/stats 1h 2m 3s
+/version
+    """
+    await update.message.reply_text(help_text)
+
 
 async def version_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask version_handler with update %s", update)
@@ -65,6 +89,10 @@ async def version_handler(update: Update, context: CallbackContext) -> None:
 
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask summarize_handler with update %s", update)
+    if update.message is None:
+        logger.info("No message provided. Possible edited message. Nothing done.")
+        return
+
     (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
 
@@ -91,7 +119,8 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
 
     response_message = await update.message.reply_text("Generating summary... Please wait.")
     try:
-        summary_generator = summarize(chat_history, delta, update.message.from_user.full_name)
+        point = get_point(context.args)
+        summary_generator = summarize(chat_history, delta, update.message.from_user, point)
         updateLastCall(chat_id)
     except Exception:
         logger.exception("An error occurred while generating the summary.")
@@ -116,6 +145,8 @@ def main():
     app.add_handler(CommandHandler("stat", stats_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
+    app.add_handler(CommandHandler("start", help_handler))
+    app.add_handler(CommandHandler("help", help_handler))
     app.add_error_handler(error_handler)
 
     app.run_polling()

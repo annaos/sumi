@@ -1,6 +1,6 @@
 import logging
 
-from helpers.util import ask_ai, sender_dictionary
+from helpers.util import ask_ai, get_sender
 
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -8,8 +8,12 @@ logger = logging.getLogger(__name__)
 SUMMARY_SYSTEM_PROMPT = """
 You are a helpful AI assistant that summarizes the chat messages.
 Please identify and summarize the main discussion points from the provided chat messages. 
-For each discussion point, create a brief paragraph that clearly and concisely captures the essence of the conversation. 
-Focus on delivering a clear and accurate overview of what was discussed in russian.
+For each discussion point, create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. 
+"""
+
+POINT_SUMMARY_SYSTEM_PROMPT = """
+You are a helpful AI assistant that summarizes the chat messages.
+Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation about %s from the provided chat messages. 
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
@@ -19,12 +23,15 @@ Do your best to provide a helpful summary of what was discussed in the provided 
 Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
 """
 
-def summarize(chat_history, delta, name: str):
+def summarize(chat_history, delta, user, point: None|str):
     messages_prompt = _generate_promt(chat_history)
-    system_promt = SUMMARY_SYSTEM_PROMPT
+    if point == None:
+        system_promt = SUMMARY_SYSTEM_PROMPT
+    else:
+        system_promt = POINT_SUMMARY_SYSTEM_PROMPT % (point)
     #if len(chat_history["messages"]) < 150:
     #    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
-    # logger.info('prompt: %s', messages_prompt)
+    logger.info('prompt: %s', messages_prompt)
 
     completion = ask_ai(system_promt, messages_prompt)
 
@@ -38,7 +45,7 @@ def summarize(chat_history, delta, name: str):
     price = in_tokens / 1000000 * 15 + out_tokens / 1000000 * 60
     metadata += f"Total price: {price:.2f} cents ({tokens} tokens)\n"
 
-    return _create_header(name, delta) + response_content + metadata
+    return _create_header(user, delta, point) + response_content + metadata
 
 
 def _generate_promt(chat_history):
@@ -48,9 +55,11 @@ def _generate_promt(chat_history):
     return messages
 
 
-def _create_header(name, delta):
-    name  = sender_dictionary(name)
+def _create_header(user, delta, point = ""):
+    name  = get_sender(user)
+    if point != "":
+        point = " о %s" % point
     if delta is None:
-        return "Вот что %s пропустил:\n\n"% (name)
-    return "Саммари за последние %s часа которые пропустил %s:\n\n" % (str(delta), name)
+        return "Вот что %s пропустил%s:\n\n"% (name, point)
+    return "Саммари за последние %s часа%s которые пропустил %s:\n\n" % (str(delta), point, name)
 

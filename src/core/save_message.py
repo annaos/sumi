@@ -29,6 +29,7 @@ def save_message(message: Message, is_edited: bool):
     except FileNotFoundError:
         chat_history = {
             "chat_id": chat_id,
+            "title": message.chat.title,
             "summary_created_at": datetime.now().isoformat(),
             "cleaned_at": datetime.now().isoformat(),
             "messages": []
