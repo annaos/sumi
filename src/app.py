@@ -82,6 +82,14 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(help_text)
 
 
+async def donate_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask donate_handler with update %s", update)
+    help_text = """
+ Хотите поддержать меня? Моя мама оплачивает аренду моего домика и кормит меня электричеством: www.paypal.com/paypalme/AnnaOstrovskaya
+ """
+    await update.message.reply_text(help_text)
+
+
 async def version_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask version_handler with update %s", update)
     await update.message.reply_text("My version is: " + VERSION)
@@ -147,6 +155,7 @@ def main():
     app.add_handler(CommandHandler("v", version_handler))
     app.add_handler(CommandHandler("start", help_handler))
     app.add_handler(CommandHandler("help", help_handler))
+    app.add_handler(CommandHandler("donate", donate_handler))
     app.add_error_handler(error_handler)
 
     app.run_polling()
