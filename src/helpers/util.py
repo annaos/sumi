@@ -46,7 +46,7 @@ def ask_ai(system, promt):
 
 def generate_joke_message(user, message: str):
     sender = get_sender(user)
-    sytem = f"Ты участник дискуссионного чата. Придумай краткий и остроумный ответ на сообщение участника чата по имени {sender}."
+    sytem = f"Ты участник дискуссионного чата. Придумай краткий, смешной и двусмысленный ответ на сообщение участника чата по имени {sender}."
 
     completion = ask_ai(sytem, message)
 

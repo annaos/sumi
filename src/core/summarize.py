@@ -13,7 +13,7 @@ For each discussion point, create a brief paragraph in russian that clearly and 
 
 POINT_SUMMARY_SYSTEM_PROMPT = """
 You are a helpful AI assistant that summarizes the chat messages.
-Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation about %s from the provided chat messages. 
+Составь краткий абзац на русском языке, чётко и сжато передающий суть обсуждения темы %s на основе предоставленных сообщений.
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
