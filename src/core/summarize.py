@@ -13,7 +13,7 @@ For each discussion point, create a brief paragraph in russian that clearly and 
 
 POINT_SUMMARY_SYSTEM_PROMPT = """
 You are a helpful AI assistant that summarizes the chat messages.
-Составь краткий абзац на русском языке, чётко и сжато передающий суть обсуждения темы %s на основе предоставленных сообщений.
+Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation, focusing on %s from the provided chat messages. 
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
@@ -23,15 +23,15 @@ Do your best to provide a helpful summary of what was discussed in the provided 
 Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
 """
 
-def summarize(chat_history, delta, user, point: None|str):
+def summarize(chat_history, delta, user, point: str):
     messages_prompt = _generate_promt(chat_history)
-    if point == None:
+    if point == "":
         system_promt = SUMMARY_SYSTEM_PROMPT
     else:
         system_promt = POINT_SUMMARY_SYSTEM_PROMPT % (point)
     #if len(chat_history["messages"]) < 150:
     #    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
-    logger.info('prompt: %s', messages_prompt)
+    logger.info('prompt: %s', system_promt)
 
     completion = ask_ai(system_promt, messages_prompt)
 
