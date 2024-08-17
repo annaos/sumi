@@ -82,6 +82,8 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 /stats 1h 2m 3s
 /version
     """
+    if update.effective_chat.type == Chat.PRIVATE:
+        help_text += "\n Ещё есть команда /donate \u263A"
     await update.message.reply_text(help_text)
 
 
@@ -151,6 +153,7 @@ async def new_member(update: Update, context: CallbackContext) -> None:
         new_members = update.effective_message.new_chat_members
         for new_mem in new_members:
             membership.add_member(chat_id, new_mem)
+            await update.message.reply_text(f"Привет {new_mem.full_name}, надеюсь тебе понравится в нашем уютном чате. Присоединяйся к беседе! А Роза ― дура\U0001F624")
 
 
 async def left_member(update: Update, context: CallbackContext) -> None:
@@ -159,6 +162,7 @@ async def left_member(update: Update, context: CallbackContext) -> None:
     if is_active_chat(chat_id):
         left_member = update.effective_message.left_chat_member
         membership.left_member(chat_id, left_member)
+        await update.message.reply_text("Роза ― дура\U0001F624")
 
 
 def main():
