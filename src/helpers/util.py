@@ -46,7 +46,7 @@ def ask_ai(system, promt):
 
 def generate_joke_message(user, message: str):
     sender = get_sender(user)
-    sytem = f"Ты участник дискуссионного чата. Придумай краткий, смешной и двусмысленный ответ на сообщение участника чата по имени {sender}."
+    sytem = f"You are a participant in a discussion chat. Come up with a short, witty response in russian to a message from a chat member named {sender}."
 
     completion = ask_ai(sytem, message)
 
@@ -70,18 +70,21 @@ def get_point(args):
 
 def _divide_args(args):
     start = True
-    time = ""
-    point = ""
+    time = []
+    point = []
     for arg in args:
         if arg[0].isdigit() and len(arg) > 1 and start:
-            time += arg + ' '
+            time.append(arg)
             continue
         else:
             start = False
         if start == False:
-            point += arg + ' '
+            point.append(arg)
+    if len(time) == 0:
+        while len(point) > 0 and point[-1][0].isdigit() and len(point[-1]) > 1:
+            time.append(point.pop())
 
-    return (time, point)
+    return (' '.join(time), ' '.join(point))
 
 def get_sender(user) -> str:
     sender = user.username
@@ -103,6 +106,8 @@ def get_sender(user) -> str:
         return "Аня"
     if user.full_name == "iVik":
         return "Витя"
+    if user.full_name == "Putyatina Tanja":
+        return "Таня"
     return user.full_name
 
 

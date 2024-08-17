@@ -1,4 +1,5 @@
 import logging
+
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%H:%M:%S',
     level=logging.INFO)
@@ -7,6 +8,7 @@ logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes
 from telegram import Update, Chat
+from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
@@ -19,7 +21,7 @@ from core.summarize import summarize
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION
 from helpers.util import get_boundary, get_time_delta, is_active_chat, get_point
-
+import helpers.membership as membership
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -62,7 +64,7 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
 
     stats_text = create_statistic(chat_history, delta)
 
-    await update.message.reply_text(stats_text)
+    await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN)
 
 async def help_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask help_handler with update %s", update)
@@ -136,8 +138,26 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
 
     await response_message.edit_text(summary_generator)
 
+
 def error_handler(update: Update, context: CallbackContext):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
+
+
+async def new_member(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask new_member with update %s", update)
+    chat_id = update.effective_message.chat_id
+    if is_active_chat(chat_id):
+        new_members = update.effective_message.new_chat_members
+        for new_mem in new_members:
+            membership.add_member(chat_id, new_mem)
+
+
+async def left_member(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask left_member with update %s", update)
+    chat_id = update.effective_message.chat_id
+    if is_active_chat(chat_id):
+        left_member = update.effective_message.left_chat_member
+        membership.left_member(chat_id, left_member)
 
 
 def main():
@@ -156,6 +176,10 @@ def main():
     app.add_handler(CommandHandler("start", help_handler))
     app.add_handler(CommandHandler("help", help_handler))
     app.add_handler(CommandHandler("donate", donate_handler))
+
+    app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
+    app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
+
     app.add_error_handler(error_handler)
 
     app.run_polling()

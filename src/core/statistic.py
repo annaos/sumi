@@ -1,4 +1,7 @@
 import re
+import datetime
+import helpers.membership as membership
+
 
 def _create_header(delta):
     if delta is None:
@@ -42,8 +45,26 @@ def create_statistic(chat_history, delta):
         statistic +='\n'
         place += 1
 
+    statistic += _get_tags(delta, chat_history["chat_id"], sorted_messages)
     return statistic
 
+
+def _get_tags(delta: datetime, chat_id, sorted_messages):
+    tags = "\n"
+    if delta.days < 7:
+        return ""
+
+    members = membership.get_all_members(chat_id)
+    diff_members = [v for v in members if v["fullname"] not in sorted_messages]
+    for mem in diff_members:
+        if mem["username"] != None:
+            tags += "@" + mem["username"] + " "
+        elif mem["id"] != None:
+            tags += "[" + mem["fullname"] + "](tg://user?id=" + str(mem["id"]) + ") "
+
+    if len(tags) > 0:
+        tags += " А вы почему молчите?"
+    return tags
 
 def _convert_history(chat_history):
     messages_count = {}

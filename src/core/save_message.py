@@ -2,9 +2,9 @@ import json
 import os
 from telegram import Message
 from datetime import timedelta, datetime
-
 from config.common import HISTORY_SAVE_DIRECTORY, CLEAN_LIMIT_DAYS, CLEAN_FREQUENCY_HOURS
-
+from helpers.util import is_active_chat
+import helpers.membership as membership
 
 def save_message(message: Message, is_edited: bool):
     chat_id = message.chat_id
@@ -18,6 +18,7 @@ def save_message(message: Message, is_edited: bool):
     message_data = {
         "message_id": message_id,
         "timestamp": datetime.now().isoformat(),
+        "sender_id": message.from_user.id,
         "sender": sender,
         "message": message_text
     }
@@ -40,11 +41,12 @@ def save_message(message: Message, is_edited: bool):
     else:
         chat_history["messages"].append(message_data)
 
-    limit = (datetime.now() - timedelta(hours=CLEAN_FREQUENCY_HOURS)).isoformat()
-    if not "cleaned_at" in chat_history or chat_history["cleaned_at"] < limit:
-        chat_history = _clean_history(chat_history)
+    chat_history = _clean_history(chat_history)
     with open(file_name, 'w') as file:
         json.dump(chat_history, file, ensure_ascii=False, indent=2)
+
+    if is_active_chat(chat_id):
+        membership.update_member(chat_id, message.from_user)
 
 
 def _replace_message(messages, updated_message):
@@ -56,11 +58,13 @@ def _replace_message(messages, updated_message):
 
 
 def _clean_history(chat_history):
-    messages = chat_history["messages"]
-    limit = (datetime.now() - timedelta(days=CLEAN_LIMIT_DAYS)).isoformat()
+    cleaned_limit = (datetime.now() - timedelta(hours=CLEAN_FREQUENCY_HOURS)).isoformat()
+    if not "cleaned_at" in chat_history or chat_history["cleaned_at"] < cleaned_limit:
+        messages = chat_history["messages"]
+        limit = (datetime.now() - timedelta(days=CLEAN_LIMIT_DAYS)).isoformat()
 
-    messages[:] = [d for d in messages if d.get('timestamp') > limit]
+        messages[:] = [d for d in messages if d.get('timestamp') > limit]
 
-    chat_history["cleaned_at"] = datetime.now().isoformat()
+        chat_history["cleaned_at"] = datetime.now().isoformat()
     return chat_history
 
