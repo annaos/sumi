@@ -41,12 +41,12 @@ def create_statistic(chat_history, delta):
         else:
             statistic += "%s: %d сообщений" % (user, count)
 
-        statistic += " (%d слов)" % (words[user])
+        statistic += " \(%d слов\)" % (words[user])
         statistic +='\n'
         place += 1
 
-    tags = _get_tags(delta, chat_history["chat_id"], sorted_messages)
-    return (statistic, tags)
+    statistic += _get_tags(delta, chat_history["chat_id"], sorted_messages)
+    return statistic
 
 
 def _get_tags(delta: datetime, chat_id, sorted_messages):
@@ -58,11 +58,11 @@ def _get_tags(delta: datetime, chat_id, sorted_messages):
     diff_members = [v for v in members if v["fullname"] not in sorted_messages]
     for mem in diff_members:
         if mem["username"] != None:
-            tags += "@" + mem["username"] + " "
+            tags += "@" + mem["username"].replace("_", "\\_") + " "
         elif mem["id"] != None:
             tags += "[" + mem["fullname"] + "](tg://user?id=" + str(mem["id"]) + ") "
 
-    if len(tags) > 0:
+    if len(tags) > 2:
         tags += "А вы почему молчите?"
     logger = get_logger()
     logger.info("tags: %s", tags)
