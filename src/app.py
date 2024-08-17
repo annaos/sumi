@@ -64,7 +64,7 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
 
     stats_text = create_statistic(chat_history, delta)
 
-    await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN)
+    await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN_V2)
 
 async def help_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask help_handler with update %s", update)

@@ -1,7 +1,7 @@
 import re
 import datetime
 import helpers.membership as membership
-
+from helpers.util import get_logger
 
 def _create_header(delta):
     if delta is None:
@@ -63,7 +63,9 @@ def _get_tags(delta: datetime, chat_id, sorted_messages):
             tags += "[" + mem["fullname"] + "](tg://user?id=" + str(mem["id"]) + ") "
 
     if len(tags) > 0:
-        tags += " А вы почему молчите?"
+        tags += "А вы почему молчите?"
+    logger = get_logger()
+    logger.info("tags: %s", tags)
     return tags
 
 def _convert_history(chat_history):
