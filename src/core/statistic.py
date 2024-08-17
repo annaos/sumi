@@ -41,7 +41,7 @@ def create_statistic(chat_history, delta):
         else:
             statistic += "%s: %d сообщений" % (user, count)
 
-        statistic += " (%d слов)" % (words[user])
+        statistic += " \(%d слов\)" % (words[user])
         statistic +='\n'
         place += 1
 
