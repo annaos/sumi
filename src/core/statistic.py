@@ -41,12 +41,12 @@ def create_statistic(chat_history, delta):
         else:
             statistic += "%s: %d сообщений" % (user, count)
 
-        statistic += " \(%d слов\)" % (words[user])
+        statistic += " (%d слов)" % (words[user])
         statistic +='\n'
         place += 1
 
-    statistic += _get_tags(delta, chat_history["chat_id"], sorted_messages)
-    return statistic
+    tags = _get_tags(delta, chat_history["chat_id"], sorted_messages)
+    return (statistic, tags)
 
 
 def _get_tags(delta: datetime, chat_id, sorted_messages):

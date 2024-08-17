@@ -62,9 +62,13 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         logger.exception("Error while trying to retrieve the chat history.")
         return
 
-    stats_text = create_statistic(chat_history, delta)
+    (stats_text, tags) = create_statistic(chat_history, delta)
+    logger.info("stats_text: %s", stats_text)
+    logger.info("stats_text: %s", tags)
 
-    await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN_V2)
+    await update.message.reply_text(stats_text)
+    if tags != "":
+        await update.message.reply_text(tags, parse_mode=ParseMode.MARKDOWN_V2)
 
 async def help_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask help_handler with update %s", update)
