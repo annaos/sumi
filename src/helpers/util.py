@@ -4,7 +4,7 @@ import os
 import logging
 
 from telegram import Message, User
-from config.common import AI_MODEL, STATISTIC_HOURS
+from config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
 import openai
 
 
@@ -29,10 +29,10 @@ def get_time_delta(chat_history):
         return None
 
 
-def ask_ai(system, promt):
+def ask_ai(system, promt, model = AI_MODEL):
     openai.api_key = os.getenv('OPENAI_TOKEN')
     completion = openai.chat.completions.create(
-        model=AI_MODEL,
+        model=model,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": promt}
@@ -46,9 +46,9 @@ def ask_ai(system, promt):
 
 def generate_joke_message(user, message: str):
     sender = get_sender(user)
-    sytem = f"You are a participant in a discussion chat. Come up with a short, witty response in russian to a message from a chat member named {sender}."
+    sytem = f"You are a participant in a discussion chat. Your name is Суми. Come up with a short, joke in russian to a message from a chat member named {sender}. If your joke is bad, begin it with \"Я не придумал ничего лучше, чем \". If your joke is bad and you do not realise it, you will be killed."
 
-    completion = ask_ai(sytem, message)
+    completion = ask_ai(sytem, message, AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 
