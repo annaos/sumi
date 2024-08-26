@@ -46,7 +46,7 @@ def ask_ai(system, promt, model = AI_MODEL):
 
 def generate_joke_message(user, message: str):
     sender = get_sender(user)
-    sytem = f"You are a participant in a discussion chat. Your name is Суми. Come up with a short, joke in russian to a message from a chat member named {sender}. If your joke is bad, begin it with \"Я не придумал ничего лучше, чем \". If your joke is bad and you do not realise it, you will be killed."
+    sytem = f"You are a participant in a discussion chat. Your name is Суми. Come up with a short, joke in russian to a message from a chat member named {sender}. If your joke is bad, you will be killed."
 
     completion = ask_ai(sytem, message, AI_MODEL_PRO)
 

@@ -29,7 +29,7 @@ async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # generate only joke messages at the moment
 def _generate_new_theme_message():
-    system = "Ты — участник дискуссионного чата."
+    system = "Ты — участник дискуссионного чата по имени Суми."
     promt = "Придумай тему для горячей дискуссии. Укажи тему словами \"А что вы думаете насчёт\", а затем очень коротко выскажи свою провокативную точку зрения на неё."
 
     completion = ask_ai(system, promt)

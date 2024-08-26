@@ -6,18 +6,18 @@ logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message
 logger = logging.getLogger(__name__)
 
 SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant that summarizes the chat messages.
+You are a helpful AI assistant named Sumi that summarizes the chat messages.
 Please identify and summarize the main discussion points from the provided chat messages. 
 For each discussion point, create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. 
 """
 
 POINT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant that summarizes the chat messages.
+You are a helpful AI assistant named Sumi that summarizes the chat messages.
 Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation, focusing on %s from the provided chat messages. 
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant that summarizes the chat messages.
+You are a helpful AI assistant named Sumi that summarizes the chat messages.
 Do your best to provide a helpful summary of what was discussed in the provided chat messages.
 
 Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
