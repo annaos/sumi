@@ -34,6 +34,9 @@ def update_member(chat_id, user: User):
 
     members = _read_members_json(chat_id)
     for i, member in enumerate(members):
+        if member["fullname"] == user.full_name and member["id"] != None:
+            return
+
         if member["fullname"] == user.full_name and member["id"] == None:
             members[i] = member_data
             _write_members_json(chat_id, members)
