@@ -1,5 +1,6 @@
 import logging
 
+from config.common import VERSION
 from helpers.util import ask_ai, get_sender
 
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -44,6 +45,7 @@ def summarize(chat_history, delta, user, point: str):
     tokens = completion.usage.total_tokens
     price = in_tokens / 1000000 * 15 + out_tokens / 1000000 * 60
     metadata += f"Total price: {price:.2f} cents ({tokens} tokens)\n"
+    metadata += f"Version: {VERSION}\n"
 
     return _create_header(user, delta, point) + response_content + metadata
 

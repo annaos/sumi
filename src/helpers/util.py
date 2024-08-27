@@ -29,7 +29,7 @@ def get_time_delta(chat_history):
         return None
 
 
-def ask_ai(system, promt, model = AI_MODEL):
+def ask_ai(system, promt, model = AI_MODEL_PRO):
     openai.api_key = os.getenv('OPENAI_TOKEN')
     completion = openai.chat.completions.create(
         model=model,
