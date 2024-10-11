@@ -1,3 +1,5 @@
+from pyexpat.errors import messages
+
 from pytimeparse.timeparse import timeparse
 from datetime import timedelta, datetime
 import os
@@ -31,12 +33,22 @@ def get_time_delta(chat_history):
 
 def ask_ai(system, promt, model = AI_MODEL):
     openai.api_key = os.getenv('OPENAI_TOKEN')
-    completion = openai.chat.completions.create(
-        model=model,
+
+    if type(promt) is list:
+        messages = [
+            {"role": "system", "content": system},
+        ]
+        for p in promt:
+            messages.append({"role": "user", "content": p})
+    else:
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": promt}
         ]
+
+    completion = openai.chat.completions.create(
+        model=model,
+        messages=messages
     )
     logger = get_logger()
     logger.info(completion)
@@ -46,7 +58,7 @@ def ask_ai(system, promt, model = AI_MODEL):
 
 def generate_joke_message(user, message: str):
     sender = get_sender(user)
-    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщение участника по имени {sender}. Если шутка будет плохой, тебя убьют."
+    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщение участника по имени {sender}."
 
     completion = ask_ai(sytem, message, AI_MODEL_PRO)
 

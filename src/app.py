@@ -20,7 +20,7 @@ from core.statistic import create_statistic
 from core.summarize import summarize
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION
-from helpers.util import get_boundary, get_time_delta, is_active_chat, get_point
+from helpers.util import get_boundary, get_time_delta, is_active_chat, get_point, generate_joke_message
 import helpers.membership as membership
 load_dotenv()
 
@@ -40,6 +40,19 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text(answer)
         else:
             new_random_message(update.effective_message.chat_id, message, context)
+
+
+async def shut_handler(update: Update, context: CallbackContext) -> None:
+    is_edited = update.edited_message is not None
+    reply_to_message = update.message.reply_to_message
+
+    if not is_edited and reply_to_message is not None:
+        answer = generate_joke_message(reply_to_message.from_user, reply_to_message.text)
+        if answer:
+            await update.message.reply_text(answer)
+
+    if reply_to_message is None:
+        await update.message.reply_text("О чём шутить?")
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
@@ -73,6 +86,7 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 Меня зовут Sumi. Я умею анализировать историю чата, где я состою. Я знаю следующие комманды:
 - /summarize (или просто /sum) — Я составлю краткое содержание сообщений за указанный период (не более 30 дней). Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
 - /stats — Предоставлю статистику по сообщениям за указанный период. Можно использовать как ответ на сообщение или указать временной промежуток. Если не указать, подведу статистику за последние 10 часов.
+- /shut — Пошучу. Нужно использовать как ответ на сообщение
 - /version — Покажу свою текущую версию.
 
 В некоторых чатах я иногда шучу или подкалываю своих любимчиков. Если у вас есть идеи для меня, напишите мне лично.
@@ -176,6 +190,7 @@ def main():
     app.add_handler(CommandHandler("stats", stats_handler))
     app.add_handler(CommandHandler("statt", stats_handler))
     app.add_handler(CommandHandler("stat", stats_handler))
+    app.add_handler(CommandHandler("shut", shut_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
     app.add_handler(CommandHandler("start", help_handler))
