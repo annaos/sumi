@@ -11,19 +11,19 @@ def _create_header(delta):
 
 def create_statistic(chat_history, delta):
     statistic = _create_header(delta)
-    (messages, words) = _convert_history(chat_history)
+    messages = _convert_history(chat_history)
     if len(messages) == 0:
         return statistic + "Никто ничего не написал."
 
-    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1], reverse=True)}
+    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1]["count"], reverse=True)}
 
     place = 1
-    (min, max) = _get_extremum(messages, words)
-    for user, count in sorted_messages.items():
-        if user == min:
+    (min, max) = _get_extremum(messages)
+    for user_id, data in sorted_messages.items():
+        if data["sender"] == min:
             statistic +='\U0001F64A'
 
-        if user == max:
+        if data["sender"] == max:
             statistic +='\U0001F485'
 
         if place == 1:
@@ -33,15 +33,15 @@ def create_statistic(chat_history, delta):
         if place == 3:
             statistic +='\U0001F949'
 
-        if place > 3 and count == 1:
+        if place > 3 and data["count"] == 1:
             statistic +='\U0001F9D8'
 
-        if count == 1:
-            statistic += "%s: %d сообщение" % (user, count)
+        if data["count"] == 1:
+            statistic += "%s: %d сообщение" % (data["sender"], data["count"])
         else:
-            statistic += "%s: %d сообщений" % (user, count)
+            statistic += "%s: %d сообщений" % (data["sender"], data["count"])
 
-        statistic += " \(%d слов\)" % (words[user])
+        statistic += (" \(\~%.1f слов\)" % (data["words"] / data["count"])).replace(".",",")
         statistic +='\n'
         place += 1
 
@@ -50,12 +50,12 @@ def create_statistic(chat_history, delta):
 
 
 def _get_tags(delta: datetime, chat_id, sorted_messages):
-    tags = "\n"
     if delta.days < 7:
         return ""
 
+    tags = "\n"
     members = membership.get_all_members(chat_id)
-    diff_members = [v for v in members if v["fullname"] not in sorted_messages]
+    diff_members = [v for v in members if v["id"] not in sorted_messages.keys()]
     for mem in diff_members:
         if mem["username"] != None:
             tags += "@" + mem["username"].replace("_", "\\_") + " "
@@ -68,35 +68,38 @@ def _get_tags(delta: datetime, chat_id, sorted_messages):
     logger.info("tags: %s", tags)
     return tags
 
+
 def _convert_history(chat_history):
     messages_count = {}
-    words_count = {}
 
     for message in chat_history["messages"]:
-        if message["sender"] in messages_count:
-            messages_count[message["sender"]] += 1
-            words_count[message["sender"]] += _count_words(message["message"])
+        if message["sender_id"] in messages_count:
+            messages_count[message["sender_id"]]["count"] += 1
+            messages_count[message["sender_id"]]["words"] += _count_words(message["message"])
         else:
-            messages_count[message["sender"]] = 1
-            words_count[message["sender"]] = _count_words(message["message"])
+            messages_count[message["sender_id"]] = {
+                "sender": message["sender"],
+                "count": 1,
+                "words": _count_words(message["message"])
+            }
 
-    return (messages_count, words_count)
+    return messages_count
 
 
 def _count_words(s: str):
     return len(re.findall(r'\w+', s.strip()))
 
 
-def _get_extremum(messages, words):
+def _get_extremum(messages):
     minName = maxName = ""
     min = max = 0
-    for user, count in messages.items():
-        c = words[user] / count
+    for user_id, data in messages.items():
+        c = data["words"] / data["count"]
         if max < c:
             max = c
-            maxName = user
+            maxName = data["sender"]
         if min == 0 or min > c:
             min = c
-            minName = user
+            minName = data["sender"]
 
     return (minName, maxName)
