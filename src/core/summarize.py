@@ -25,7 +25,7 @@ Reply with a short paragraph summarizing what are the main points of the chat me
 """
 
 def summarize(chat_history, delta, user, point: str):
-    messages_prompts = _generate_promts(chat_history)
+    messages_prompt = _generate_promt(chat_history)
     if point == "":
         system_promt = SUMMARY_SYSTEM_PROMPT
     else:
@@ -34,7 +34,7 @@ def summarize(chat_history, delta, user, point: str):
     #    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
     logger.info('prompt: %s', system_promt)
 
-    completion = ask_ai(system_promt, messages_prompts)
+    completion = ask_ai(system_promt, messages_prompt)
 
     response_content = completion.choices[0].message.content
     metadata = "\n\n---\n\n"
@@ -50,17 +50,10 @@ def summarize(chat_history, delta, user, point: str):
     return _create_header(user, delta, point) + response_content + metadata
 
 
-def _generate_promts(chat_history):
-    messages = []
-    i = j = 0
+def _generate_promt(chat_history):
+    messages = ""
     for message in chat_history["messages"]:
-        if j == 0:
-            messages.append("")
-        j += 1
-        messages[i] += "%s: %s \n" % (message["sender"], message["message"])
-        if j == 1000:
-            i += 1
-            j = 0
+        messages += "%s: %s \n" % (message["sender"], message["message"])
     return messages
 
 

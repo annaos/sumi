@@ -49,7 +49,7 @@ async def shut_handler(update: Update, context: CallbackContext) -> None:
     if not is_edited and reply_to_message is not None:
         answer = generate_joke_message(reply_to_message.from_user, reply_to_message.text)
         if answer:
-            await update.message.reply_text(answer)
+            await reply_to_message.reply_text(answer)
 
     if reply_to_message is None:
         await update.message.reply_text("О чём шутить?")

@@ -1,5 +1,3 @@
-from pyexpat.errors import messages
-
 from pytimeparse.timeparse import timeparse
 from datetime import timedelta, datetime
 import os
@@ -33,22 +31,12 @@ def get_time_delta(chat_history):
 
 def ask_ai(system, promt, model = AI_MODEL):
     openai.api_key = os.getenv('OPENAI_TOKEN')
-
-    if type(promt) is list:
-        messages = [
-            {"role": "system", "content": system},
-        ]
-        for p in promt:
-            messages.append({"role": "user", "content": p})
-    else:
+    completion = openai.chat.completions.create(
+        model=model,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": promt}
         ]
-
-    completion = openai.chat.completions.create(
-        model=model,
-        messages=messages
     )
     logger = get_logger()
     logger.info(completion)
