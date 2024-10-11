@@ -43,6 +43,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
 
 
 async def shut_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask shut_handler with update %s", update)
     is_edited = update.edited_message is not None
     reply_to_message = update.message.reply_to_message
 
