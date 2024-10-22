@@ -5,6 +5,7 @@ import logging
 
 from telegram import Message, User
 from config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
+from helpers.membership import get_real_name
 import openai
 
 
@@ -20,6 +21,11 @@ def get_boundary(reply_to_message: Message, args):
         pass
 
     return (None, delta)
+
+
+def get_poll_options(args):
+    return [line for line in [line.strip() for line in args.split("\"")] if line]
+
 
 def get_time_delta(chat_history):
     try:
@@ -87,27 +93,9 @@ def _divide_args(args):
     return (' '.join(time), ' '.join(point))
 
 def get_sender(user) -> str:
-    sender = user.username
-    if sender == "naturalist":
-        return "Феликс"
-    if sender == "tetianafast":
-        return "Таня"
-    if sender == "shachtyor":
-        return "Марик"
-    if sender == "arty_name":
-        return "Артём"
-    if sender == "Smarteclaire":
-        return "Света"
-    if sender == "quasado":
-        return "Эльвира"
-    if sender == "LadaReFa":
-        return "Лада"
-    if sender == "anna_os":
-        return "Аня"
-    if user.full_name == "iVik":
-        return "Витя"
-    if user.full_name == "Putyatina Tanja":
-        return "Таня"
+    chats = os.getenv('ACTIVE_CHAT_IDS').split(",")
+    if len(chats) > 0:
+        return get_real_name(user, chats[0])
     return user.full_name
 
 

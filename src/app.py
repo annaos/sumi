@@ -6,7 +6,7 @@ logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes, PollHandler
 from telegram import Update, Chat
 from telegram.constants import ParseMode
 from dotenv import load_dotenv
@@ -15,16 +15,46 @@ import os
 
 from core.get_chat_history import get_chat_history_by_timestamp, get_chat_history_by_message_id, updateLastCall
 from core.save_message import save_message
+from core.poll import create_poll, save_anonym_poll_answer
 from core.new_message import new_random_message
 from core.statistic import create_statistic
 from core.summarize import summarize
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION
-from helpers.util import get_boundary, get_time_delta, is_active_chat, get_point, generate_joke_message
+from helpers.util import get_boundary, get_time_delta, is_active_chat, get_point, generate_joke_message, get_poll_options
 import helpers.membership as membership
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+async def create_anonym_single_poll_handler(update: Update, context: CallbackContext) -> None:
+    await create_poll_handler(False, update, context)
+
+
+async def create_anonym_multi_poll_handler(update: Update, context: CallbackContext) -> None:
+    await create_poll_handler(True, update, context)
+
+
+async def create_poll_handler(multiply: bool, update: Update, context: CallbackContext) -> None:
+    logger.info("Ask create_poll_handler with update %s", update)
+    questions = get_poll_options(" ".join(context.args))
+    question = questions[0] if len(questions) > 0 else "How are you?"
+    options = questions[1:] if len(questions) > 2 else ["Good", "Really good", "Fantastic", "Great"]
+    specification = update.message.reply_to_message.text if update.message.reply_to_message is not None else None
+
+    message = await context.bot.send_poll(
+        update.effective_chat.id,
+        question,
+        options,
+        is_anonymous=True,
+        allows_multiple_answers=multiply,
+    )
+    create_poll(message.poll, specification)
+
+
+async def poll_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    save_anonym_poll_answer(update.poll)
+
 
 async def message_handler(update: Update, context: CallbackContext) -> None:
     is_edited = update.edited_message is not None
@@ -197,13 +227,16 @@ def main():
     app.add_handler(CommandHandler("start", help_handler))
     app.add_handler(CommandHandler("help", help_handler))
     app.add_handler(CommandHandler("donate", donate_handler))
+    app.add_handler(CommandHandler("poll", create_anonym_multi_poll_handler))
+    app.add_handler(CommandHandler("singlepoll", create_anonym_single_poll_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
+    app.add_handler(PollHandler(poll_handler))
 
     app.add_error_handler(error_handler)
 
-    app.run_polling()
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()

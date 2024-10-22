@@ -24,6 +24,14 @@ def add_member(chat_id, user: User):
     _write_members_json(chat_id, members)
 
 
+def get_real_name(user: User, chat_id: str):
+    members = _read_members_json(chat_id)
+    for i, member in enumerate(members):
+        if member["id"] == user.id:
+            return member["realname"] if "realname" in member else user.full_name
+    return user.full_name
+
+
 def update_member(chat_id, user: User):
     member_data = {
         "id": user.id,

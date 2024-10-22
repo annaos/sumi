@@ -1,6 +1,7 @@
 import os
 
 # Make sure to add this directory to .gitignore"
+POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "polls"))
 HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "chats_history"))
 HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "members_history"))
 
@@ -14,7 +15,7 @@ STATISTIC_HOURS = 10
 
 NEW_MESSAGE_MINUTES = 90
 
-VERSION = "0.0.19"
+VERSION = "0.1.0"
 
 ACTIVE_ANSWER_FREQUENCY = 5
 ALL_ANSWER_FREQUENCY = 100
