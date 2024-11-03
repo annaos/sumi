@@ -15,7 +15,7 @@ import os
 
 from core.get_chat_history import get_chat_history_by_timestamp, get_chat_history_by_message_id, updateLastCall
 from core.save_message import save_message
-from core.poll import create_poll, save_anonym_poll_answer
+from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
 from core.new_message import new_random_message
 from core.statistic import create_statistic
 from core.summarize import summarize
@@ -48,8 +48,32 @@ async def create_poll_handler(multiply: bool, update: Update, context: CallbackC
         options,
         is_anonymous=True,
         allows_multiple_answers=multiply,
+        protect_content = True
     )
-    create_poll(message.poll, specification)
+    create_poll(message, specification)
+
+
+async def close_poll_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask close_poll_handler with update %s", update)
+
+    poll_id = None
+    message_id = None
+    if len(context.args) > 0:
+        poll_id = context.args[0]
+        message_id = get_poll_message_id(poll_id)
+    else:
+        reply_to_message = update.message.reply_to_message
+        if update.message.reply_to_message is not None:
+            message_id = reply_to_message.id
+            poll = reply_to_message.poll
+            if poll is not None:
+                poll_id = poll.id
+
+    if poll_id is None or message_id is None:
+        await update.message.reply_text("Нечего закрывать")
+    else:
+        await context.bot.stop_poll(update.message.chat_id, int(message_id))
+        stop_poll(poll_id)
 
 
 async def poll_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -118,6 +142,9 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 - /summarize (или просто /sum) — Я составлю краткое содержание сообщений за указанный период (не более 30 дней). Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
 - /stats — Предоставлю статистику по сообщениям за указанный период. Можно использовать как ответ на сообщение или указать временной промежуток. Если не указать, подведу статистику за последние 10 часов.
 - /shut — Пошучу. Нужно использовать как ответ на сообщение
+- /poll — Создам опрос с несколькими возможностями ответа.
+- /singlepoll — Создам опрос с только одной возможностью ответа. 
+- /stop и /close — Закрыть опрос. Необходимо ответить командой на сообщение с опросом (или использовать id опроса как аргумент)
 - /version — Покажу свою текущую версию.
 
 В некоторых чатах я иногда шучу или подкалываю своих любимчиков. Если у вас есть идеи для меня, напишите мне лично.
@@ -125,6 +152,9 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 Примеры команд:
 /summarize 5d Эльвира
 /stats 1h 2m 3s
+/poll "Что вы любите есть?" "макароны" "бутерброд" "суши" "пицца" "другое"
+/singlepoll "Мне" "<18 лет" "18-65" ">65 лет"
+/stop 5276238139109673455
 /version
     """
     if update.effective_chat.type == Chat.PRIVATE:
@@ -229,6 +259,8 @@ def main():
     app.add_handler(CommandHandler("donate", donate_handler))
     app.add_handler(CommandHandler("poll", create_anonym_multi_poll_handler))
     app.add_handler(CommandHandler("singlepoll", create_anonym_single_poll_handler))
+    app.add_handler(CommandHandler("close", close_poll_handler))
+    app.add_handler(CommandHandler("stop", close_poll_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
