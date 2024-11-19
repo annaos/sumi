@@ -47,8 +47,7 @@ async def create_poll_handler(multiply: bool, update: Update, context: CallbackC
         question,
         options,
         is_anonymous=True,
-        allows_multiple_answers=multiply,
-        protect_content = True
+        allows_multiple_answers=multiply
     )
     create_poll(message, specification)
 
