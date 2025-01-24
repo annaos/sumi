@@ -5,7 +5,7 @@ import logging
 
 from telegram import Message, User, MessageEntity
 from config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
-from helpers.member import get_real_name
+from helpers.member import get_real_name, get_member_by_name
 import openai
 
 
@@ -31,7 +31,12 @@ def get_user(message: Message) -> User|None:
         return message.reply_to_message.from_user
     for entity in message.entities:
         if entity.type == MessageEntity.TEXT_MENTION:
-            return entity.user
+             return entity.user
+        if entity.type == MessageEntity.MENTION :
+            username = message.text[entity.offset+1:entity.offset + entity.length]
+            memb = get_member_by_name(message.chat_id, username)
+            if memb is not None and memb["id"] is not None:
+                return User(id=memb["id"], first_name=memb["fullname"], username=memb["username"], is_bot=False)
     return None
 
 

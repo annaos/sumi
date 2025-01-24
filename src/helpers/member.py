@@ -24,6 +24,14 @@ def add_member(chat_id, user: User):
     _write_members_json(chat_id, members)
 
 
+def get_member_by_name(chat_id, name: str):
+    members = _read_members_json(chat_id)
+    for i, member in enumerate(members):
+        if member["username"] == name or member["fullname"] == name:
+            return member
+    return None
+
+
 def get_real_name(user: User, chat_id: str):
     members = _read_members_json(chat_id)
     for i, member in enumerate(members):

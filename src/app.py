@@ -7,7 +7,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes, PollHandler
-from telegram import Update, Chat
+from telegram import Update, Chat, User
 from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -190,12 +190,13 @@ async def version_handler(update: Update, context: CallbackContext) -> None:
 
 async def profile_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask profile_handler with update %s", update)
+    chat_id = update.message.chat_id
     user = get_user(update.message)
-    if user is None:
+
+    if not isinstance(user, User):
         await update.message.reply_text("No user found to profile.")
         return
 
-    chat_id = update.message.chat_id
     delta = get_boundary(context.args, timedelta(days=PROFILE_DAYS))
 
     timestamp = (datetime.now() - delta).isoformat()
