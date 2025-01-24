@@ -5,7 +5,7 @@ import logging
 
 from telegram import Message, User
 from config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
-from helpers.membership import get_real_name
+from helpers.member import get_real_name
 import openai
 
 
@@ -57,6 +57,10 @@ def generate_joke_message(user, message: str):
     completion = ask_ai(sytem, message, AI_MODEL_PRO)
 
     return completion.choices[0].message.content
+
+
+def is_active_membership_chat(chat_id: int) -> bool:
+    return str(chat_id) in os.getenv('ACTIVE_MEMBERSHIP_CHAT_IDS').split(",")
 
 
 def is_active_chat(chat_id: int) -> bool:

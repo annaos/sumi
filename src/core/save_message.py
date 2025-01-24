@@ -4,7 +4,7 @@ from telegram import Message
 from datetime import timedelta, datetime
 from config.common import HISTORY_SAVE_DIRECTORY, CLEAN_LIMIT_DAYS, CLEAN_FREQUENCY_HOURS
 from helpers.util import is_active_chat
-import helpers.membership as membership
+import helpers.member as member
 
 def save_message(message: Message, is_edited: bool):
     chat_id = message.chat_id
@@ -46,7 +46,7 @@ def save_message(message: Message, is_edited: bool):
         json.dump(chat_history, file, ensure_ascii=False, indent=2)
 
     if is_active_chat(chat_id):
-        membership.update_member(chat_id, message.from_user)
+        member.update_member(chat_id, message.from_user)
 
 
 def _replace_message(messages, updated_message):

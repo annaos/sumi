@@ -1,6 +1,6 @@
 import re
 import datetime
-import helpers.membership as membership
+import helpers.member as member
 from helpers.util import get_logger
 
 def _create_header(delta):
@@ -54,7 +54,7 @@ def _get_tags(delta: datetime, chat_id, sorted_messages):
         return ""
 
     tags = "\n"
-    members = membership.get_all_members(chat_id)
+    members = member.get_all_members(chat_id)
     diff_members = [v for v in members if v["id"] not in sorted_messages.keys()]
     for mem in diff_members:
         if mem["username"] != None:
