@@ -285,17 +285,17 @@ async def left_member(update: Update, context: CallbackContext) -> None:
 async def members_history_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask members_history_handler with update %s", update)
     chat_id = update.effective_message.chat_id
-    count = int(context.args) if int(context.args) > 0 else 10
+    count = int(" ".join(context.args)) if " ".join(context.args).isnumeric() and int(" ".join(context.args)) > 0 else 10
     history = get_last_entries(chat_id, count)
     msg = ""
     for entry in history:
-        name = entry.fullname if entry.fullname else entry.username
-        if entry.fullname and entry.username:
-            name += " (aka " + entry.username + ")"
-        state = "к нам присоединился" if entry.join == "join" else "нас покинул"
-        time = datetime.fromisoformat(entry.timestamp).strftime("%d %B %Y, %H:%M:%S")
+        name = entry["fullname"] if entry["fullname"] else entry["username"]
+        if entry["fullname"] and entry["username"]:
+            name += " (aka " + entry["username"] + ")"
+        state = "к нам присоединился" if entry["status"] == "join" else "нас покинул"
+        time = datetime.fromisoformat(entry["timestamp"]).strftime("%d %B %Y, %H:%M:%S")
 
-        msg += f"{state} {time} {name}\n"
+        msg += f"{time} {state} {name}\n"
     await update.message.reply_text(msg)
 
 
@@ -304,7 +304,7 @@ def main():
     TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    app.add_handler(MessageHandler(filters.TEXT | filters.CAPTION, message_handler))
+    app.add_handler(MessageHandler((filters.TEXT & (~filters.COMMAND)) | filters.CAPTION, message_handler))
     app.add_handler(CommandHandler("sum", summarize_handler))
     app.add_handler(CommandHandler("summarize", summarize_handler))
     app.add_handler(CommandHandler("stats", stats_handler))
@@ -325,6 +325,7 @@ def main():
     app.add_handler(CommandHandler("close", close_poll_handler))
     app.add_handler(CommandHandler("stop", close_poll_handler))
     app.add_handler(CommandHandler("members_history", members_history_handler))
+    app.add_handler(CommandHandler("history", members_history_handler))
     app.add_handler(CommandHandler("profile", profile_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
