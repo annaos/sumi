@@ -18,7 +18,7 @@ Create a brief paragraph in russian that clearly and concisely captures the esse
 """
 
 PROFILE_SYSTEM_PROMPT = """
-Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника на основе его общения. Используй тот же стиль общения, что и в сообщениях. Ответь на русском не больше чем в паре абзацев.
+Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника %s на основе его общения. Подходи к анализу критично и не бойся обидеть участника. Используй тот же стиль общения, что и в сообщениях. Ответь на русском не больше чем в четырёх предложениях.
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
@@ -56,7 +56,7 @@ def summarize(chat_history, delta, user, point: str):
 
 def profile(chat_history, user, delta):
     messages_prompt = _generate_promt(chat_history)
-    system_promt = PROFILE_SYSTEM_PROMPT
+    system_promt = PROFILE_SYSTEM_PROMPT % user.full_name
 
     completion = ask_ai(system_promt, messages_prompt)
 
