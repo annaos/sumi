@@ -23,6 +23,7 @@ from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION
 from helpers.util import get_boundary, get_time_delta, is_active_chat, is_active_membership_chat, get_point, generate_joke_message, get_poll_options
 import helpers.member as member
+from helpers.membership import add_entry, get_last_entries
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -150,6 +151,7 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 - /summarize (или просто /sum) — Я составлю краткое содержание сообщений за указанный период (не более 30 дней). Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
 - /stats — Предоставлю статистику по сообщениям за указанный период. Можно использовать как ответ на сообщение или указать временной промежуток. Если не указать, подведу статистику за последние 10 часов.
 - /shut — Пошучу. Нужно использовать как ответ на сообщение
+- /members_history — Показать историю изменения участников чата. Работает только в малениких чатах до 50 участников.
 - /poll_anonym или /poll — Создам анонимный опрос с несколькими возможностями ответа.
 - /singlepoll_anonym или /singlepoll — Создам анонимный опрос с только одной возможностью ответа. 
 - /poll_no_anonym — Создам опрос с несколькими возможностями ответа.
@@ -236,6 +238,7 @@ async def new_member(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_message.chat_id
     new_members = update.effective_message.new_chat_members
     for new_mem in new_members:
+        add_entry(chat_id, new_mem, True)
         member.add_member(chat_id, new_mem)
         if is_active_membership_chat(chat_id):
             await update.message.reply_text(f"Привет {new_mem.full_name}, надеюсь тебе понравится в нашем уютном чате. Присоединяйся к беседе! А Роза ― дура\U0001F624")
@@ -245,9 +248,27 @@ async def left_member(update: Update, context: CallbackContext) -> None:
     logger.info("Ask left_member with update %s", update)
     chat_id = update.effective_message.chat_id
     left_member = update.effective_message.left_chat_member
+    add_entry(chat_id, left_member, False)
     member.left_member(chat_id, left_member)
     if is_active_membership_chat(chat_id):
         await update.message.reply_text("Роза ― дура\U0001F624")
+
+
+async def members_history_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask members_history_handler with update %s", update)
+    chat_id = update.effective_message.chat_id
+    count = int(context.args) if int(context.args) > 0 else 10
+    history = get_last_entries(chat_id, count)
+    msg = ""
+    for entry in history:
+        name = entry.fullname if entry.fullname else entry.username
+        if entry.fullname and entry.username:
+            name += " (aka " + entry.username + ")"
+        state = "к нам присоединился" if entry.join == "join" else "нас покинул"
+        time = datetime.fromisoformat(entry.timestamp).strftime("%d %B %Y, %H:%M:%S")
+
+        msg += f"{state} {time} {name}\n"
+    await update.message.reply_text(msg)
 
 
 def main():
@@ -275,6 +296,7 @@ def main():
     app.add_handler(CommandHandler("singlepoll_no_anonym", create_single_poll_handler))
     app.add_handler(CommandHandler("close", close_poll_handler))
     app.add_handler(CommandHandler("stop", close_poll_handler))
+    app.add_handler(CommandHandler("members_history", members_history_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
