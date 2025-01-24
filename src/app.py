@@ -13,15 +13,15 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
 
-from core.get_chat_history import get_chat_history_by_timestamp, get_chat_history_by_message_id, updateLastCall
+import core.get_chat_history as gch
 from core.save_message import save_message
 from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
 from core.new_message import new_random_message
 from core.statistic import create_statistic
-from core.summarize import summarize
+from core.summarize import summarize, profile
 from core.felix_special import answer_felix
-from config.common import SUMMARY_HOURS_LIMIT, VERSION
-from helpers.util import get_boundary, get_time_delta, is_active_chat, is_active_membership_chat, get_point, generate_joke_message, get_poll_options
+from config.common import SUMMARY_HOURS_LIMIT, VERSION, PROFILE_DAYS
+from helpers.util import get_statistic_boundary, get_boundary, get_user, get_time_delta, is_active_chat, is_active_membership_chat, get_point, generate_joke_message, get_poll_options
 import helpers.member as member
 from helpers.membership import add_entry, get_last_entries
 load_dotenv()
@@ -124,16 +124,16 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         logger.info("No message provided. Possible edited message. Nothing done.")
         return
 
-    (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
+    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
 
     try:
         if not message_id is None:
-            chat_history = get_chat_history_by_message_id(chat_id, message_id)
+            chat_history = gch.get_chat_history_by_message_id(chat_id, message_id)
             delta = get_time_delta(chat_history)
         else:
             timestamp = (datetime.now() - delta).isoformat()
-            chat_history = get_chat_history_by_timestamp(chat_id, timestamp)
+            chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
     except Exception:
         logger.exception("Error while trying to retrieve the chat history.")
         await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
@@ -150,7 +150,8 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 Меня зовут Sumi. Я умею анализировать историю чата, где я состою. Я знаю следующие комманды:
 - /summarize (или просто /sum) — Я составлю краткое содержание сообщений за указанный период (не более 30 дней). Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
 - /stats — Предоставлю статистику по сообщениям за указанный период. Можно использовать как ответ на сообщение или указать временной промежуток. Если не указать, подведу статистику за последние 10 часов.
-- /shut — Пошучу. Нужно использовать как ответ на сообщение
+- /shut — Пошучу. Нужно использовать как ответ на сообщение.
+- /profile — Охарактеризую выбранного участника за определённый период.
 - /members_history — Показать историю изменения участников чата. Работает только в малениких чатах до 50 участников.
 - /poll_anonym или /poll — Создам анонимный опрос с несколькими возможностями ответа.
 - /singlepoll_anonym или /singlepoll — Создам анонимный опрос с только одной возможностью ответа. 
@@ -187,22 +188,49 @@ async def version_handler(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text("My version is: " + VERSION)
 
 
+async def profile_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask profile_handler with update %s", update)
+    user = get_user(update.message)
+    if user is None:
+        await update.message.reply_text("No user found to profile.")
+        return
+
+    chat_id = update.message.chat_id
+    delta = get_boundary(context.args, timedelta(days=PROFILE_DAYS))
+
+    timestamp = (datetime.now() - delta).isoformat()
+    chat_history = gch.get_chat_history_by_user_id(chat_id, user.id, timestamp)
+
+    if len(chat_history["messages"]) == 0:
+        await update.message.reply_text("No messages found to profile.")
+        return
+
+    response_message = await context.bot.send_message(chat_id, text="Generating profiling for %s... Please wait." % user.full_name)
+    try:
+        profile_generator = profile(chat_history, user, delta)
+    except Exception:
+        logger.exception("An error occurred while generating the profiling.")
+        profile_generator = "An error occurred while generating the profiling."
+
+    await response_message.edit_text(profile_generator)
+
+
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask summarize_handler with update %s", update)
     if update.message is None:
         logger.info("No message provided. Possible edited message. Nothing done.")
         return
 
-    (message_id, delta) = get_boundary(update.message.reply_to_message, context.args)
+    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
 
     try:
         if not message_id is None:
-            chat_history = get_chat_history_by_message_id(chat_id, message_id)
+            chat_history = gch.get_chat_history_by_message_id(chat_id, message_id)
             delta = get_time_delta(chat_history)
         else:
             timestamp = (datetime.now() - delta).isoformat()
-            chat_history = get_chat_history_by_timestamp(chat_id, timestamp)
+            chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
     except Exception:
         logger.exception("Error while trying to retrieve the chat history.")
         await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
@@ -221,7 +249,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
     try:
         point = get_point(context.args)
         summary_generator = summarize(chat_history, delta, update.message.from_user, point)
-        updateLastCall(chat_id)
+        gch.updateLastCall(chat_id)
     except Exception:
         logger.exception("An error occurred while generating the summary.")
         summary_generator = "An error occurred while generating the summary."
@@ -276,7 +304,7 @@ def main():
     TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), message_handler))
+    app.add_handler(MessageHandler(filters.TEXT | filters.CAPTION, message_handler))
     app.add_handler(CommandHandler("sum", summarize_handler))
     app.add_handler(CommandHandler("summarize", summarize_handler))
     app.add_handler(CommandHandler("stats", stats_handler))
@@ -297,6 +325,7 @@ def main():
     app.add_handler(CommandHandler("close", close_poll_handler))
     app.add_handler(CommandHandler("stop", close_poll_handler))
     app.add_handler(CommandHandler("members_history", members_history_handler))
+    app.add_handler(CommandHandler("profile", profile_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))

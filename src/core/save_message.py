@@ -10,7 +10,7 @@ def save_message(message: Message, is_edited: bool):
     chat_id = message.chat_id
     message_id = message.message_id
     sender = message.from_user.full_name
-    message_text = message.text
+    message_text = message.text if message.text else message.caption
 
     file_name = f'{HISTORY_SAVE_DIRECTORY}/chat_history_{str(chat_id)}.json'
     os.makedirs(os.path.dirname(file_name), exist_ok=True)
@@ -20,6 +20,7 @@ def save_message(message: Message, is_edited: bool):
         "timestamp": datetime.now().isoformat(),
         "sender_id": message.from_user.id,
         "sender": sender,
+        "reply_to": message.reply_to_message.message_id if message.reply_to_message is not None else None,
         "message": message_text
     }
 

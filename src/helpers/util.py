@@ -3,24 +3,36 @@ from datetime import timedelta, datetime
 import os
 import logging
 
-from telegram import Message, User
+from telegram import Message, User, MessageEntity
 from config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
 from helpers.member import get_real_name
 import openai
 
 
-def get_boundary(reply_to_message: Message, args):
+def get_statistic_boundary(reply_to_message: Message, args):
     if reply_to_message:
         return (reply_to_message.message_id, None)
+    delta = get_boundary(args)
+    return (None, delta)
+
+
+def get_boundary(args, default = timedelta(hours=STATISTIC_HOURS)):
     try:
         (arg_str, _) = _divide_args(args)
         t = timeparse(arg_str)
         delta = timedelta(seconds=t)
+        return delta
     except Exception:
-        delta = timedelta(hours=STATISTIC_HOURS)
-        pass
+        return default
 
-    return (None, delta)
+
+def get_user(message: Message) -> User|None:
+    if message.reply_to_message:
+        return message.reply_to_message.from_user
+    for entity in message.entities:
+        if entity.type == MessageEntity.TEXT_MENTION:
+            return entity.user
+    return None
 
 
 def get_poll_options(args):
