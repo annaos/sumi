@@ -12,7 +12,6 @@ from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
-import json
 
 import core.get_chat_history as gch
 from core.save_message import save_message, save_private_sender, get_private_sender_id
@@ -116,7 +115,7 @@ async def list_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask list_handler with update %s", update)
     if update.effective_chat.type == Chat.PRIVATE and update.effective_message.chat_id == int(os.getenv("MY_CHAT_ID")):
         chats = gch.get_chat_list()
-        await update.message.reply_text(json.dumps(chats, indent=4))
+        await update.message.reply_text("\n".join(f"{key}: {value}" for key, value in chats.items()))
 
 
 async def shut_handler(update: Update, context: CallbackContext) -> None:
