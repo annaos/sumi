@@ -3,7 +3,7 @@ import os
 from telegram import Message
 from datetime import timedelta, datetime
 from config.common import HISTORY_SAVE_DIRECTORY, CLEAN_LIMIT_DAYS, CLEAN_FREQUENCY_HOURS
-from helpers.util import is_active_chat
+from helpers.util import is_active_chat, get_logger
 import helpers.member as member
 
 def save_message(message: Message, is_edited: bool):
@@ -32,6 +32,7 @@ def save_message(message: Message, is_edited: bool):
         chat_history = {
             "chat_id": chat_id,
             "title": message.chat.title,
+            "timestamp": datetime.now().isoformat(),
             "summary_created_at": datetime.now().isoformat(),
             "cleaned_at": datetime.now().isoformat(),
             "messages": []
@@ -48,6 +49,41 @@ def save_message(message: Message, is_edited: bool):
 
     if is_active_chat(chat_id):
         member.update_member(chat_id, message.from_user)
+
+
+def save_private_sender(chat_id, full_name, username):
+    file_name = f'{HISTORY_SAVE_DIRECTORY}/private_chats.json'
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+    try:
+        with open(file_name, 'r') as file:
+            chat_history = json.load(file)
+            if any(chat["chat_id"] == chat_id for chat in chat_history):
+                return
+    except FileNotFoundError:
+        chat_history = []
+
+    chat_history.append({
+        "username": username,
+        "chat_id": chat_id,
+        "full_name": full_name,
+    })
+    with open(file_name, 'w') as file:
+        json.dump(chat_history, file, ensure_ascii=False, indent=2)
+
+
+def get_private_sender_id(name):
+    file_name = f'{HISTORY_SAVE_DIRECTORY}/private_chats.json'
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+    try:
+        with open(file_name, 'r') as file:
+            chat_history = json.load(file)
+            for chat in chat_history:
+                if chat["username"] == name or chat["full_name"] == name:
+                    return chat["chat_id"]
+    except Exception as e:
+        logger = get_logger()
+        logger.error("An error occurred: %s", e)
+    return None
 
 
 def _replace_message(messages, updated_message):

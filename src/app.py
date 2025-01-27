@@ -12,9 +12,10 @@ from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
+import json
 
 import core.get_chat_history as gch
-from core.save_message import save_message
+from core.save_message import save_message, save_private_sender, get_private_sender_id
 from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
 from core.new_message import new_random_message
 from core.statistic import create_statistic
@@ -92,9 +93,16 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
     is_edited = update.edited_message is not None
     message = update.edited_message if is_edited else update.message
     save_message(message, is_edited)
+    reply_to_message = message.reply_to_message
+    root_chat_id = int(os.getenv("MY_CHAT_ID"))
 
-    if update.effective_chat.type == Chat.PRIVATE:
-        await update.message.forward(os.getenv("MY_CHAT_ID"))
+    if update.effective_chat.type == Chat.PRIVATE and message.chat_id != root_chat_id:
+        save_private_sender(message.chat_id, message.from_user.full_name, message.from_user.username)
+        await update.message.forward(root_chat_id)
+    elif update.effective_chat.type == Chat.PRIVATE and message.chat_id == root_chat_id and reply_to_message is not None:
+        id = get_private_sender_id(reply_to_message.api_kwargs["forward_sender_name"])
+        if id is not None:
+            await context.bot.send_message(id, text=message.text)
 
     if is_active_chat(update.effective_message.chat_id) and not is_edited:
         answer = answer_felix(message, is_edited)
@@ -102,6 +110,13 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
             await update.message.reply_text(answer)
         else:
             new_random_message(update.effective_message.chat_id, message, context)
+
+
+async def list_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask list_handler with update %s", update)
+    if update.effective_chat.type == Chat.PRIVATE and update.effective_message.chat_id == int(os.getenv("MY_CHAT_ID")):
+        chats = gch.get_chat_list()
+        await update.message.reply_text(json.dumps(chats, indent=4))
 
 
 async def shut_handler(update: Update, context: CallbackContext) -> None:
@@ -190,6 +205,15 @@ async def version_handler(update: Update, context: CallbackContext) -> None:
 
 async def profile_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask profile_handler with update %s", update)
+    await base_profile_handler(False, update, context)
+
+
+async def profile_kai_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask profile_kai_handler with update %s", update)
+    await base_profile_handler(True, update, context)
+
+
+async def base_profile_handler(kai: bool, update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
     user = get_user(update.message)
 
@@ -208,7 +232,7 @@ async def profile_handler(update: Update, context: CallbackContext) -> None:
 
     response_message = await context.bot.send_message(chat_id, text="Generating profiling for %s... Please wait." % user.full_name)
     try:
-        profile_generator = profile(chat_history, user, delta)
+        profile_generator = profile(chat_history, user, delta, kai)
     except Exception:
         logger.exception("An error occurred while generating the profiling.")
         profile_generator = "An error occurred while generating the profiling."
@@ -328,6 +352,8 @@ def main():
     app.add_handler(CommandHandler("members_history", members_history_handler))
     app.add_handler(CommandHandler("history", members_history_handler))
     app.add_handler(CommandHandler("profile", profile_handler))
+    app.add_handler(CommandHandler("profile_kai", profile_kai_handler))
+    app.add_handler(CommandHandler("list", list_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))

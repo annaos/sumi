@@ -18,6 +18,10 @@ Create a brief paragraph in russian that clearly and concisely captures the esse
 """
 
 PROFILE_SYSTEM_PROMPT = """
+Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника %s на основе его общения. Подходи к анализу критично. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения участника. Ответь на русском не больше чем в четырёх предложениях.
+"""
+
+PROFILE_KAI_SYSTEM_PROMPT = """
 Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника %s на основе его общения. Подходи к анализу критично. Не бойся обидеть участника. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения участника. Ответь на русском не больше чем в четырёх предложениях.
 """
 
@@ -54,9 +58,9 @@ def summarize(chat_history, delta, user, point: str):
     return _create_summarize_header(user, delta, point) + response_content + metadata
 
 
-def profile(chat_history, user, delta):
+def profile(chat_history, user, delta, kai: bool):
     messages_prompt = _generate_promt(chat_history)
-    system_promt = PROFILE_SYSTEM_PROMPT % user.full_name
+    system_promt = PROFILE_KAI_SYSTEM_PROMPT % user.full_name if kai else PROFILE_SYSTEM_PROMPT % user.full_name
 
     completion = ask_ai(system_promt, messages_prompt)
 
