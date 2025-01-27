@@ -7,7 +7,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ContextTypes, PollHandler
-from telegram import Update, Chat, User
+from telegram import Update, Chat, User, Bot
 from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -139,8 +139,11 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         logger.info("No message provided. Possible edited message. Nothing done.")
         return
 
-    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
+    if not is_active_chat(chat_id) and not update.message.from_user.id in await _get_admin_ids(context.bot, chat_id):
+        return
+
+    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
 
     try:
         if not message_id is None:
@@ -246,8 +249,11 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
         logger.info("No message provided. Possible edited message. Nothing done.")
         return
 
-    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
     chat_id = update.message.chat_id
+    if not is_active_chat(chat_id) and not update.message.from_user.id in await _get_admin_ids(context.bot, chat_id):
+        return
+
+    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
 
     try:
         if not message_id is None:
@@ -322,6 +328,14 @@ async def members_history_handler(update: Update, context: CallbackContext) -> N
 
         msg += f"{time} {state} {name}\n"
     await update.message.reply_text(msg)
+
+
+async def _get_admin_ids(bot: Bot, chat_id: int):
+    cms = await bot.getChatAdministrators(chat_id)
+    result = []
+    for cm in cms:
+        result.append(cm.user.id)
+    return result
 
 
 def main():

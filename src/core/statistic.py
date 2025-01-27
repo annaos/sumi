@@ -13,7 +13,7 @@ def create_statistic(chat_history, delta):
     statistic = _create_header(delta)
     messages = _convert_history(chat_history)
     if len(messages) == 0:
-        return statistic + "Никто ничего не написал."
+        return statistic + "Никто ничего не написал"
 
     sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1]["count"], reverse=True)}
 
