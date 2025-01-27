@@ -10,7 +10,7 @@ import openai
 
 
 def get_statistic_boundary(reply_to_message: Message, args):
-    if reply_to_message:
+    if reply_to_message and reply_to_message.message_id != reply_to_message.message_thread_id:
         return (reply_to_message.message_id, None)
     delta = get_boundary(args)
     return (None, delta)

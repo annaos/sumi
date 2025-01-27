@@ -152,6 +152,9 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
         else:
             timestamp = (datetime.now() - delta).isoformat()
             chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
+    except FileNotFoundError:
+        await update.message.reply_text("There is no chat history yet. Maybe I was just added to the chat.")
+        return
     except Exception:
         logger.exception("Error while trying to retrieve the chat history.")
         await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
@@ -262,6 +265,9 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
         else:
             timestamp = (datetime.now() - delta).isoformat()
             chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
+    except FileNotFoundError:
+        await update.message.reply_text("There is no chat history yet. Maybe I was just added to the chat.")
+        return
     except Exception:
         logger.exception("Error while trying to retrieve the chat history.")
         await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
