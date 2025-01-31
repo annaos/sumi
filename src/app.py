@@ -222,6 +222,9 @@ async def base_profile_handler(kai: bool, update: Update, context: CallbackConte
     chat_id = update.message.chat_id
     user = get_user(update.message)
 
+    if not is_active_chat(chat_id) and not update.message.from_user.id in await _get_admin_ids(context.bot, chat_id):
+        return
+
     if not isinstance(user, User):
         await update.message.reply_text("No user found to profile.")
         return
@@ -272,10 +275,10 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
         return
 
-    time_diff = datetime.now() - datetime.fromisoformat(chat_history["summary_created_at"])
-    if os.getenv('PROD') == "True" and time_diff < timedelta(hours=SUMMARY_HOURS_LIMIT):
-        await update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % SUMMARY_HOURS_LIMIT)
-        return
+    # time_diff = datetime.now() - datetime.fromisoformat(chat_history["summary_created_at"])
+    # if os.getenv('PROD') == "True" and time_diff < timedelta(hours=SUMMARY_HOURS_LIMIT):
+    #     await update.message.reply_text("Прошло меньше %d часов с последнего запроса. Все вопросы к Феликсу." % SUMMARY_HOURS_LIMIT)
+    #     return
 
     if len(chat_history["messages"]) == 0:
         await update.message.reply_text("No messages found to summarize.")

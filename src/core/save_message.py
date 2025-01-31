@@ -89,7 +89,7 @@ def get_private_sender_id(name):
 def _replace_message(messages, updated_message):
     for i in range(len(messages)):
         if messages[i]["message_id"] == updated_message["message_id"]:
-            messages[i] = updated_message
+            messages[i]["message"] = updated_message["message"]
             break
     return messages
 
