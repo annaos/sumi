@@ -127,7 +127,7 @@ async def remove_handler(update: Update, context: CallbackContext) -> None:
     is_edited = update.edited_message is not None
     mes = update.message.reply_to_message
 
-    if not is_edited and mes is not None:
+    if not is_edited and mes is not None and mes.from_user.is_bot:
         await context.bot.deleteMessage(message_id = update.message.message_id, chat_id = mes.chat_id)
         await context.bot.deleteMessage(message_id = mes.message_id, chat_id = mes.chat_id)
 
