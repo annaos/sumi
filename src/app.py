@@ -21,7 +21,7 @@ from core.statistic import create_statistic
 from core.summarize import summarize, profile
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION, PROFILE_DAYS
-from helpers.util import get_statistic_boundary, get_boundary, get_user, get_time_delta, is_active_chat, is_active_membership_chat, get_point, generate_joke_message, get_poll_options
+from helpers.util import get_statistic_boundary, get_boundary, get_user, get_time_delta, is_active_chat, is_active_membership_chat, get_point, generate_joke_message, generate_chain_joke_message, get_poll_options
 import helpers.member as member
 from helpers.membership import add_entry, get_last_entries
 load_dotenv()
@@ -138,7 +138,8 @@ async def shut_handler(update: Update, context: CallbackContext) -> None:
     mes = update.message.reply_to_message
 
     if not is_edited and mes is not None:
-        answer = generate_joke_message(mes.from_user, mes.text if mes.text else mes.caption)
+        #answer = generate_joke_message(mes.from_user, mes.text if mes.text else mes.caption)
+        answer = generate_chain_joke_message(gch.get_message_history_by_message(mes))
         if answer:
             await mes.reply_text(answer)
 
@@ -372,6 +373,7 @@ def main():
     app.add_handler(CommandHandler("statt", stats_handler))
     app.add_handler(CommandHandler("stat", stats_handler))
     app.add_handler(CommandHandler("shut", shut_handler))
+    app.add_handler(CommandHandler("joke", shut_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
     app.add_handler(CommandHandler("start", help_handler))

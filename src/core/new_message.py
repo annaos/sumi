@@ -5,7 +5,8 @@ from telegram.ext import CallbackContext, ContextTypes
 from telegram import Message
 
 from config.common import NEW_MESSAGE_MINUTES
-from helpers.util import ask_ai, generate_joke_message
+from helpers.util import ask_ai, generate_joke_message, generate_chain_joke_message
+import core.get_chat_history as gch
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,7 @@ def new_delay_message(chat_id, message: Message, context: CallbackContext):
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
     message = job.data
-    text = message.text if message.text else message.caption
-    await context.bot.send_message(job.chat_id, text=generate_joke_message(message.from_user, text))
+    await context.bot.send_message(job.chat_id, text=generate_chain_joke_message(gch.get_message_history_by_message(message)))
 
 
 # generate only joke messages at the moment

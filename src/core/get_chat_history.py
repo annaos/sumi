@@ -2,6 +2,8 @@ import json
 import os
 from datetime import datetime
 
+from telegram import Message
+
 from config.common import HISTORY_SAVE_DIRECTORY, SUMMARY_HOURS_LIMIT
 
 def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
@@ -11,6 +13,26 @@ def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
         chat_history = json.load(file)
         chat_history["messages"] = [x for x in chat_history["messages"] if x["message_id"] >= from_message_id]
     return chat_history
+
+def get_message_history_by_message(mes: Message):
+    message_history = []
+    chat_id = mes.chat_id
+    file_name = f'{HISTORY_SAVE_DIRECTORY}/chat_history_{str(chat_id)}.json'
+    with open(file_name, 'r') as file:
+        chat_history = json.load(file)
+        rep_m = _get_reply_to_message(chat_history, mes.message_id)
+        if rep_m is None:
+            return [{"sender": mes.from_user.full_name, "message": mes.text if mes.text else mes.caption}]
+        message_history.append(rep_m)
+        while rep_m and rep_m["reply_to"]:
+            rep_m = _get_reply_to_message(chat_history, rep_m["reply_to"])
+            message_history.append(rep_m)
+
+    return message_history
+
+
+def _get_reply_to_message(chat_history, message_id):
+    return next((x for x in chat_history["messages"] if x["message_id"] == message_id), None)
 
 
 def get_chat_history_by_timestamp(chat_id: int, timestamp: str):

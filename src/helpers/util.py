@@ -76,6 +76,19 @@ def generate_joke_message(user, message: str):
     return completion.choices[0].message.content
 
 
+def generate_chain_joke_message(messages_history):
+    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на дискуссию. Избегай слов WI-Fi и кофе."
+
+    messages = ""
+    for message in messages_history:
+        if message != None:
+            messages += "%s: %s \n" % (message["sender"], message["message"])
+
+    completion = ask_ai(sytem, messages, AI_MODEL_PRO)
+
+    return completion.choices[0].message.content
+
+
 def is_active_membership_chat(chat_id: int) -> bool:
     return str(chat_id) in os.getenv('ACTIVE_MEMBERSHIP_CHAT_IDS').split(",")
 
