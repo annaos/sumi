@@ -9,7 +9,7 @@ from helpers.util import ask_ai, generate_joke_message
 
 logger = logging.getLogger(__name__)
 
-def new_random_message(chat_id, message: Message, context: CallbackContext):
+def new_delay_message(chat_id, message: Message, context: CallbackContext):
     current_jobs = context.job_queue.get_jobs_by_name(str(chat_id))
     if current_jobs:
         for job in current_jobs:
@@ -24,7 +24,8 @@ def new_random_message(chat_id, message: Message, context: CallbackContext):
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
     message = job.data
-    await context.bot.send_message(job.chat_id, text=generate_joke_message(message.from_user, message.text))
+    text = message.text if message.text else message.caption
+    await context.bot.send_message(job.chat_id, text=generate_joke_message(message.from_user, text))
 
 
 # generate only joke messages at the moment

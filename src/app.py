@@ -16,7 +16,7 @@ import os
 import core.get_chat_history as gch
 from core.save_message import save_message, save_private_sender, get_private_sender_id
 from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
-from core.new_message import new_random_message
+from core.new_message import new_delay_message
 from core.statistic import create_statistic
 from core.summarize import summarize, profile
 from core.felix_special import answer_felix
@@ -99,7 +99,11 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
         save_private_sender(message.chat_id, message.from_user.full_name, message.from_user.username)
         await update.message.forward(root_chat_id)
     elif update.effective_chat.type == Chat.PRIVATE and message.chat_id == root_chat_id and reply_to_message is not None:
-        id = get_private_sender_id(reply_to_message.api_kwargs["forward_sender_name"])
+        id = None
+        if "forward_sender_name" in reply_to_message.api_kwargs:
+            id = get_private_sender_id(reply_to_message.api_kwargs["forward_sender_name"])
+        elif "forward_from" in reply_to_message.api_kwargs:
+            id = reply_to_message.api_kwargs["forward_from"]["id"]
         if id is not None:
             await context.bot.send_message(id, text=message.text)
 
@@ -108,7 +112,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
         if answer:
             await update.message.reply_text(answer)
         else:
-            new_random_message(update.effective_message.chat_id, message, context)
+            new_delay_message(update.effective_message.chat_id, message, context)
 
 
 async def list_handler(update: Update, context: CallbackContext) -> None:
@@ -118,17 +122,27 @@ async def list_handler(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("\n".join(f"{key}: {value}" for key, value in chats.items()))
 
 
+async def remove_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask remove_handler with update %s", update)
+    is_edited = update.edited_message is not None
+    mes = update.message.reply_to_message
+
+    if not is_edited and mes is not None:
+        await context.bot.deleteMessage(message_id = update.message.message_id, chat_id = mes.chat_id)
+        await context.bot.deleteMessage(message_id = mes.message_id, chat_id = mes.chat_id)
+
+
 async def shut_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask shut_handler with update %s", update)
     is_edited = update.edited_message is not None
-    reply_to_message = update.message.reply_to_message
+    mes = update.message.reply_to_message
 
-    if not is_edited and reply_to_message is not None:
-        answer = generate_joke_message(reply_to_message.from_user, reply_to_message.text)
+    if not is_edited and mes is not None:
+        answer = generate_joke_message(mes.from_user, mes.text if mes.text else mes.caption)
         if answer:
-            await reply_to_message.reply_text(answer)
+            await mes.reply_text(answer)
 
-    if reply_to_message is None:
+    if mes is None:
         await update.message.reply_text("О чём шутить?")
 
 
@@ -376,6 +390,7 @@ def main():
     app.add_handler(CommandHandler("profile", profile_handler))
     app.add_handler(CommandHandler("profile_kai", profile_kai_handler))
     app.add_handler(CommandHandler("list", list_handler))
+    app.add_handler(CommandHandler("cease", remove_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
