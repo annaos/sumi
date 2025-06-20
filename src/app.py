@@ -17,7 +17,7 @@ import core.get_chat_history as gch
 from core.save_message import save_message, save_private_sender, get_private_sender_id
 from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
 from core.new_message import new_delay_message
-from core.statistic import create_statistic
+from core.statistic import create_statistic, create_wordle_statistic
 from core.summarize import summarize, profile
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION, PROFILE_DAYS
@@ -178,6 +178,40 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
     logger.info("stats_text: %s", stats_text)
 
     await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN_V2)
+
+
+async def wordle_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask wordle_handler with update %s", update)
+    if update.message is None:
+        logger.info("No message provided. Possible edited message. Nothing done.")
+        return
+
+    chat_id = update.message.chat_id
+    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
+    try:
+        if not message_id is None:
+            chat_history = gch.get_chat_history_by_message_id(chat_id, message_id)
+            delta = get_time_delta(chat_history)
+        else:
+            timestamp = (datetime.now() - delta).isoformat()
+            chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
+    except FileNotFoundError:
+        await update.message.reply_text("There is no chat history yet. Maybe I was just added to the chat.")
+        return
+    except Exception:
+        logger.exception("Error while trying to retrieve the chat history.")
+        await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
+        return
+
+    if len(chat_history["messages"]) == 0:
+        await update.message.reply_text("No messages found to analyse.")
+        return
+
+    stats_text = create_wordle_statistic(chat_history, delta)
+    logger.info("wordle_stats_text: %s", stats_text)
+
+    await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN_V2)
+
 
 async def help_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask help_handler with update %s", update)
@@ -393,6 +427,7 @@ def main():
     app.add_handler(CommandHandler("profile_kai", profile_kai_handler))
     app.add_handler(CommandHandler("list", list_handler))
     app.add_handler(CommandHandler("cease", remove_handler))
+    app.add_handler(CommandHandler("wordle", wordle_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))

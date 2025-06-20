@@ -49,6 +49,31 @@ def create_statistic(chat_history, delta):
     return statistic
 
 
+def create_wordle_statistic(chat_history, delta):
+    statistic = _create_header(delta)
+    messages = _convert_wordle_history(chat_history)
+    if len(messages) == 0:
+        return statistic + "Никто ничего не отгадал"
+
+    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1]["wordle"], reverse=True)}
+
+    place = 1
+    for user_id, data in sorted_messages.items():
+        if place == 1:
+            statistic +='\U0001F947'
+        if place == 2:
+            statistic +='\U0001F948'
+        if place == 3:
+            statistic +='\U0001F949'
+
+        statistic += "%s: %d вордли" % (data["sender"], data["count"])
+        statistic += (" \(\~ с %.1f попытки\)" % (data["wordle"] / data["count"])).replace(".",",")
+        statistic +='\n'
+        place += 1
+
+    return statistic
+
+
 def _get_tags(delta: datetime, chat_id, sorted_messages):
     if delta.days < 7:
         return ""
@@ -84,6 +109,35 @@ def _convert_history(chat_history):
             }
 
     return messages_count
+
+
+def _convert_wordle_history(chat_history):
+    messages_count = {}
+
+    for message in chat_history["messages"]:
+        if _is_wordle(message["message"]):
+            if message["sender_id"] in messages_count:
+                messages_count[message["sender_id"]]["count"] += 1
+                messages_count[message["sender_id"]]["wordle"] += _count_wordle(message["message"])
+            else:
+                messages_count[message["sender_id"]] = {
+                    "sender": message["sender"],
+                    "count": 1,
+                    "wordle": _count_wordle(message["message"])
+                }
+
+    return messages_count
+
+
+def _is_wordle(s: str):
+    return len(re.findall(r'Вордли дня', s.strip())) > 0
+
+
+def _count_wordle(s: str):
+    match = re.search(r"#\d+ (\d+)/\d+", s)
+    if match:
+        return int(match.group(1))
+    return 8
 
 
 def _count_words(s: str):
