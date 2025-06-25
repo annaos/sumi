@@ -55,7 +55,7 @@ def create_wordle_statistic(chat_history, delta):
     if len(messages) == 0:
         return statistic + "Никто ничего не отгадал"
 
-    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1]["wordle"], reverse=True)}
+    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1]["wordle"] / x[1]["count"], reverse=False)}
 
     place = 1
     for user_id, data in sorted_messages.items():

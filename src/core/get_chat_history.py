@@ -23,10 +23,10 @@ def get_message_history_by_message(mes: Message):
         rep_m = _get_reply_to_message(chat_history, mes.message_id)
         if rep_m is None:
             return [{"sender": mes.from_user.full_name, "message": mes.text if mes.text else mes.caption}]
-        message_history.insert(rep_m)
+        message_history.insert(0, rep_m)
         while rep_m and rep_m["reply_to"]:
             rep_m = _get_reply_to_message(chat_history, rep_m["reply_to"])
-            message_history.insert(rep_m)
+            message_history.insert(0, rep_m)
 
     return message_history
 
