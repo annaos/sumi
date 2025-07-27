@@ -77,7 +77,7 @@ def generate_joke_message(user, message: str):
 
 
 def generate_chain_joke_message(messages_history):
-    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на дискуссию. Избегай тем Wi-Fi и кофе."
+    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщения без указания имени. Избегай тем Wi-Fi и кофе."
 
     messages = ""
     for message in messages_history:

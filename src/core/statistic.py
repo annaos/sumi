@@ -46,7 +46,7 @@ def create_statistic(chat_history, delta):
         place += 1
 
     statistic += _get_tags(delta, chat_history["chat_id"], sorted_messages)
-    return statistic
+    return statistic.replace("!","\!").replace(".","\.")
 
 
 def create_wordle_statistic(chat_history, delta):
