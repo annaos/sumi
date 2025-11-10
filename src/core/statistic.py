@@ -74,6 +74,54 @@ def create_wordle_statistic(chat_history, delta):
     return statistic
 
 
+def create_wordle_green_statistic(chat_history, delta):
+    statistic = _create_header(delta)
+    messages = _convert_wordle_history(chat_history)
+    if len(messages) == 0:
+        return statistic + "Никто ничего не отгадал"
+
+    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: x[1]["green"] / x[1]["count"], reverse=False)}
+    place = 1
+    for user_id, data in sorted_messages.items():
+        if place == 1:
+            statistic +='\U0001F947'
+        if place == 2:
+            statistic +='\U0001F948'
+        if place == 3:
+            statistic +='\U0001F949'
+
+        statistic += "%s: %d вордли" % (data["sender"], data["count"])
+        statistic += (" \(\~ %.1f зелёных\)" % (data["green"] / data["count"])).replace(".",",")
+        statistic +='\n'
+        place += 1
+
+    return statistic
+
+
+def create_wordle_color_statistic(chat_history, delta):
+    statistic = _create_header(delta)
+    messages = _convert_wordle_history(chat_history)
+    if len(messages) == 0:
+        return statistic + "Никто ничего не отгадал"
+
+    sorted_messages = {k: v for k, v in sorted(messages.items(), key=lambda x: (x[1]["green"] + x[1]["yellow"]) / x[1]["count"], reverse=False)}
+    place = 1
+    for user_id, data in sorted_messages.items():
+        if place == 1:
+            statistic +='\U0001F947'
+        if place == 2:
+            statistic +='\U0001F948'
+        if place == 3:
+            statistic +='\U0001F949'
+
+        statistic += "%s: %d вордли" % (data["sender"], data["count"])
+        statistic += (" \(\~ %.1f цветных\)" % ((data["green"] + data["yellow"]) / data["count"])).replace(".",",")
+        statistic +='\n'
+        place += 1
+
+    return statistic
+
+
 def _get_tags(delta: datetime, chat_id, sorted_messages):
     if delta.days < 7:
         return ""
@@ -119,11 +167,17 @@ def _convert_wordle_history(chat_history):
             if message["sender_id"] in messages_count:
                 messages_count[message["sender_id"]]["count"] += 1
                 messages_count[message["sender_id"]]["wordle"] += _count_wordle(message["message"])
+                messages_count[message["sender_id"]]["green"] += _count_green(message["message"])
+                messages_count[message["sender_id"]]["yellow"] += _count_yellow(message["message"])
+                messages_count[message["sender_id"]]["grey"] += _count_grey(message["message"])
             else:
                 messages_count[message["sender_id"]] = {
                     "sender": message["sender"],
                     "count": 1,
-                    "wordle": _count_wordle(message["message"])
+                    "wordle": _count_wordle(message["message"]),
+                    "green": _count_green(message["message"]),
+                    "yellow": _count_yellow(message["message"]),
+                    "grey": _count_grey(message["message"])
                 }
 
     return messages_count
@@ -138,6 +192,18 @@ def _count_wordle(s: str):
     if match:
         return int(match.group(1))
     return 8
+
+
+def _count_green(s: str):
+    return s.count('🟩')
+
+
+def _count_yellow(s: str):
+    return s.count('🟨')
+
+
+def _count_grey(s: str):
+    return s.count('⬜')
 
 
 def _count_words(s: str):

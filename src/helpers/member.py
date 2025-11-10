@@ -65,7 +65,7 @@ def update_member(chat_id, user: User):
 def left_member(chat_id, user: User):
     members = _read_members_json(chat_id)
     for i in range(len(members)):
-        if members[i]["fullname"] == user.full_name and "left_at" not in members[i]:
+        if members[i]["id"] == user.id and "left_at" not in members[i]:
             members[i]["left_at"] = datetime.now().isoformat()
             break
 

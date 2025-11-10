@@ -17,7 +17,7 @@ import core.get_chat_history as gch
 from core.save_message import save_message, save_private_sender, get_private_sender_id
 from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
 from core.new_message import new_delay_message
-from core.statistic import create_statistic, create_wordle_statistic
+from core.statistic import create_statistic, create_wordle_statistic, create_wordle_green_statistic, create_wordle_color_statistic
 from core.summarize import summarize, profile
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION, PROFILE_DAYS
@@ -181,6 +181,18 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
 
 
 async def wordle_handler(update: Update, context: CallbackContext) -> None:
+    await general_wordle_handler(update, context, "default")
+
+
+async def green_wordle_handler(update: Update, context: CallbackContext) -> None:
+    await general_wordle_handler(update, context, "green")
+
+
+async def color_wordle_handler(update: Update, context: CallbackContext) -> None:
+    await general_wordle_handler(update, context, "color")
+
+
+async def general_wordle_handler(update: Update, context: CallbackContext, mod: str = "default") -> None:
     logger.info("Ask wordle_handler with update %s", update)
     if update.message is None:
         logger.info("No message provided. Possible edited message. Nothing done.")
@@ -207,7 +219,12 @@ async def wordle_handler(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("No messages found to analyse.")
         return
 
-    stats_text = create_wordle_statistic(chat_history, delta)
+    if mod == "green":
+        stats_text = create_wordle_green_statistic(chat_history, delta)
+    elif mod == "color":
+        stats_text = create_wordle_color_statistic(chat_history, delta)
+    else:
+        stats_text = create_wordle_statistic(chat_history, delta)
     logger.info("wordle_stats_text: %s", stats_text)
 
     await update.message.reply_text(stats_text, parse_mode=ParseMode.MARKDOWN_V2)
@@ -397,6 +414,14 @@ async def _get_admin_ids(bot: Bot, chat_id: int):
     return result
 
 
+async def invite_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask invite_handler with update %s", update)
+    if update.effective_chat.type == Chat.PRIVATE and update.effective_message.chat_id == int(os.getenv("MY_CHAT_ID")):
+        chat = os.getenv("ACTIVE_CHAT_IDS").partition(",")[0]
+        link = await context.bot.create_chat_invite_link(chat)
+        await update.message.reply_text(link.invite_link)
+
+
 def main():
     load_dotenv()
     TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -430,6 +455,9 @@ def main():
     app.add_handler(CommandHandler("list", list_handler))
     app.add_handler(CommandHandler("cease", remove_handler))
     app.add_handler(CommandHandler("wordle", wordle_handler))
+    app.add_handler(CommandHandler("wordleG", green_wordle_handler))
+    app.add_handler(CommandHandler("wordleC", color_wordle_handler))
+    app.add_handler(CommandHandler("invite", invite_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
