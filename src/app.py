@@ -12,6 +12,9 @@ from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
+import random
+from telegram.constants import ReactionEmoji
+from telegram import ReactionTypeEmoji
 
 import core.get_chat_history as gch
 from core.save_message import save_message, save_private_sender, get_private_sender_id
@@ -156,8 +159,24 @@ async def say_handler(update: Update, context: CallbackContext) -> None:
         mes = update.message
 
     if not is_edited and mes is not None:
-        await mes.reply_text(update.message.text[9:])
-        await context.bot.deleteMessage(message_id = mes.message_id, chat_id = mes.chat_id)
+        if " " in update.message.text:
+            await mes.reply_text(update.message.text.split(" ", 1)[1])
+        await update.message.delete()
+
+
+async def reaction_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask reaction_handler with update %s", update)
+    is_edited = update.edited_message is not None
+    mes = update.message.reply_to_message
+    random_emoji = random.choice(list(ReactionEmoji))
+
+    react = update.message.text.split(" ", 1)[1] if " " in update.message.text else random_emoji.value
+    await update.message.reply_text(react)
+
+    if not is_edited:
+        if mes is not None and react is not None:
+            await update.message.set_reaction(reaction = [ReactionTypeEmoji(react)])
+        await update.message.delete()
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
@@ -449,6 +468,8 @@ def main():
     app.add_handler(CommandHandler("shut", shut_handler))
     app.add_handler(CommandHandler("joke", shut_handler))
     app.add_handler(CommandHandler("sumisay", say_handler))
+    app.add_handler(CommandHandler("say", say_handler))
+    app.add_handler(CommandHandler("reaction", reaction_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
     app.add_handler(CommandHandler("start", help_handler))
