@@ -150,10 +150,14 @@ async def shut_handler(update: Update, context: CallbackContext) -> None:
 async def say_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask say_handler with update %s", update)
     is_edited = update.edited_message is not None
+    if update.message.reply_to_message is not None:
+        mes = update.message.reply_to_message
+    else:
+        mes = update.message
 
-    if not is_edited and update.message is not None:
-        await update.message.reply_text(update.message.text)
-        await context.bot.deleteMessage(message_id = update.message.message_id, chat_id = update.message.chat_id)
+    if not is_edited and mes is not None:
+        await mes.reply_text(update.message.text[9:])
+        await context.bot.deleteMessage(message_id = mes.message_id, chat_id = mes.chat_id)
 
 
 async def stats_handler(update: Update, context: CallbackContext) -> None:
