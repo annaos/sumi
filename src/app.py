@@ -168,14 +168,14 @@ async def reaction_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask reaction_handler with update %s", update)
     is_edited = update.edited_message is not None
     mes = update.message.reply_to_message
-    random_emoji = random.choice(list(ReactionEmoji))
 
-    react = update.message.text.split(" ", 1)[1] if " " in update.message.text else random_emoji.value
-    await update.message.reply_text(react)
+    available = [e.value for e in ReactionEmoji]
+    matches = [e for e in available if e in update.message.text]
+    emoji = random.choice(matches) if matches else random.choice(available)
 
     if not is_edited:
-        if mes is not None and react is not None:
-            await update.message.set_reaction(reaction = [ReactionTypeEmoji(react)])
+        if mes is not None:
+            await mes.set_reaction(reaction = emoji)
         await update.message.delete()
 
 
