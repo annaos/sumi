@@ -147,6 +147,15 @@ async def shut_handler(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("О чём шутить?")
 
 
+async def say_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask say_handler with update %s", update)
+    is_edited = update.edited_message is not None
+
+    if not is_edited and update.message is not None:
+        await update.message.reply_text(update.message.text)
+        await context.bot.deleteMessage(message_id = update.message.message_id, chat_id = update.message.chat_id)
+
+
 async def stats_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask stats_handler with update %s", update)
     if update.message is None:
@@ -435,6 +444,7 @@ def main():
     app.add_handler(CommandHandler("stat", stats_handler))
     app.add_handler(CommandHandler("shut", shut_handler))
     app.add_handler(CommandHandler("joke", shut_handler))
+    app.add_handler(CommandHandler("sumisay", say_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
     app.add_handler(CommandHandler("start", help_handler))
