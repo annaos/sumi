@@ -111,6 +111,11 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
             await context.bot.send_message(id, text=message.text)
 
     if is_active_chat(update.effective_message.chat_id) and not is_edited:
+        if random.random() < 0.05:
+            available = [e.value for e in ReactionEmoji]
+            emoji = random.choice(available)
+            await message.set_reaction(reaction=emoji)
+
         answer = answer_felix(message, is_edited)
         if answer:
             await update.message.reply_text(answer)
