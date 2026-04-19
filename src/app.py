@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import os
 import random
 from telegram.constants import ReactionEmoji
-from telegram import ReactionTypeEmoji
+from telegram.error import BadRequest
 
 import core.get_chat_history as gch
 from core.save_message import save_message, save_private_sender, get_private_sender_id
@@ -114,7 +114,10 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
         if random.random() < 0.05:
             available = [e.value for e in ReactionEmoji]
             emoji = random.choice(available)
-            await message.set_reaction(reaction=emoji)
+            try:
+              await message.set_reaction(reaction=emoji)
+            except BadRequest as e:
+                logger.exception(repr(e) + ": Try to set invalid reaktion: " + emoji)
 
         answer = answer_felix(message, is_edited)
         if answer:
@@ -276,6 +279,8 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
 - /wordle — Покажу статистику по решению wordle за указанный период.
 - /joke — Пошучу. Нужно использовать как ответ на сообщение.
 - /profile — Охарактеризую выбранного участника за определённый период. Есть злой брат-близнец /profile_kai.
+- /say — Скажу то, что должно быть сказано.
+- /reaction — Поставлю реакцию сообщению.
 - /members_history — Показать историю изменения участников чата. Работает только в малениких чатах до 50 участников.
 - /poll_anonym или /poll — Создам анонимный опрос с несколькими возможностями ответа.
 - /singlepoll_anonym или /singlepoll — Создам анонимный опрос с только одной возможностью ответа. 
