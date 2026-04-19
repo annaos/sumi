@@ -186,7 +186,7 @@ async def reaction_handler(update: Update, context: CallbackContext) -> None:
             try:
                 await mes.set_reaction(reaction=emoji)
             except BadRequest as e:
-                logger.exception(repr(e) + ": Try to set invalid reaktion: " + emoji)
+                logger.warning(repr(e) + ": Try to set invalid reaktion: " + emoji)
         await update.message.delete()
 
 
