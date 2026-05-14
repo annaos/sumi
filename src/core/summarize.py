@@ -18,7 +18,7 @@ Create a brief paragraph in russian that clearly and concisely captures the esse
 """
 
 SHORT_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi in the chat. Write in russian. %s
+You are a helpful AI assistant named Sumi in the chat. Write in russian. The answer should be short, with no more than 4000 characters. %s
 """
 
 PROFILE_SYSTEM_PROMPT = """
@@ -47,6 +47,10 @@ def summarize(chat_history, delta, user, point: str = "", promt: str = ""):
     #if len(chat_history["messages"]) < 150:
     #    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
     logger.info('prompt: %s', system_promt)
+    # f = open("demofile2.txt", "a")
+    # f.write(messages_prompt)
+    # f.close()
+    # return ''
 
     completion = ask_ai(system_promt, messages_prompt)
 
