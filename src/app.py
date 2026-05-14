@@ -21,7 +21,7 @@ from core.save_message import save_message, save_private_sender, get_private_sen
 from core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
 from core.new_message import new_delay_message
 from core.statistic import create_statistic, create_wordle_statistic, create_wordle_green_statistic, create_wordle_color_statistic
-from core.summarize import summarize, profile
+from core.summarize import summarize, profile, create_summarize_header
 from core.felix_special import answer_felix
 from config.common import SUMMARY_HOURS_LIMIT, VERSION, PROFILE_DAYS
 from helpers.util import get_statistic_boundary, get_boundary, get_user, get_time_delta, is_active_chat, is_active_membership_chat, get_point, generate_joke_message, generate_chain_joke_message, get_poll_options
@@ -278,6 +278,7 @@ async def help_handler(update: Update, context: CallbackContext) -> None:
     help_text = """
 Меня зовут Sumi. Я умею анализировать историю чата, где я состою. Я знаю следующие комманды:
 - /summarize (или просто /sum) — Я составлю краткое содержание сообщений за указанный период (не более 60 дней). Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
+- /prompt — Напиши сам, что мне сделать на основании сообщений в чате. Можно использовать команду как ответ на сообщение или указать временной промежуток. Если не указать, подведу итоги за последние 10 часов. Также вы можете указать мне конкретную тему, на которой я должен сконцентрироваться.
 - /stats — Предоставлю статистику по сообщениям за указанный период. Можно использовать как ответ на сообщение или указать временной промежуток. Если не указать, подведу статистику за последние 10 часов.
 - /wordle — Покажу статистику по решению wordle за указанный период.
 - /joke — Пошучу. Нужно использовать как ответ на сообщение.
@@ -361,8 +362,8 @@ async def base_profile_handler(kai: bool, update: Update, context: CallbackConte
     await response_message.edit_text(profile_generator)
 
 
-async def promt_handler(update: Update, context: CallbackContext) -> None:
-    logger.info("Ask promt_handler with update %s", update)
+async def prompt_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask prompt_handler with update %s", update)
     if update.message is None:
         logger.info("No message provided. Possible edited message. Nothing done.")
         return
@@ -389,19 +390,20 @@ async def promt_handler(update: Update, context: CallbackContext) -> None:
         return
 
     if len(chat_history["messages"]) == 0:
-        await update.message.reply_text("No messages found to summarize.")
+        await update.message.reply_text("No messages found.")
         return
 
-    response_message = await update.message.reply_text("Generating summary... Please wait.")
+    prompt = get_point(context.args)
+    header = create_summarize_header(update.message.from_user, delta, prompt=prompt)
+    response_message = await update.message.reply_text(header + "Дайте-ка подумать...", parse_mode=ParseMode.HTML)
     try:
-        promt = get_point(context.args)
-        summary_generator = summarize(chat_history, delta, update.message.from_user, promt=promt)
+        summary_generator = summarize(chat_history, delta, update.message.from_user, prompt=prompt)
         gch.updateLastCall(chat_id)
     except Exception:
-        logger.exception("An error occurred while generating the summary.")
-        summary_generator = "An error occurred while generating the summary."
+        logger.exception("An error occurred while generating.")
+        summary_generator = "An error occurred while generating."
 
-    await response_message.edit_text(summary_generator)
+    await response_message.edit_text(header + summary_generator, parse_mode=ParseMode.HTML)
 
 
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
@@ -440,16 +442,17 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("No messages found to summarize.")
         return
 
-    response_message = await update.message.reply_text("Generating summary... Please wait.")
+    point = get_point(context.args)
+    header = create_summarize_header(update.message.from_user, delta, point=point)
+    response_message = await update.message.reply_text(header + "Дайте-ка подумать...", parse_mode=ParseMode.HTML)
     try:
-        point = get_point(context.args)
         summary_generator = summarize(chat_history, delta, update.message.from_user, point=point)
         gch.updateLastCall(chat_id)
     except Exception:
         logger.exception("An error occurred while generating the summary.")
         summary_generator = "An error occurred while generating the summary."
 
-    await response_message.edit_text(summary_generator)
+    await response_message.edit_text(header + summary_generator, parse_mode=ParseMode.HTML)
 
 
 def error_handler(update: Update, context: CallbackContext):
@@ -518,7 +521,8 @@ def main():
     app.add_handler(MessageHandler((filters.TEXT & (~filters.COMMAND)) | filters.CAPTION, message_handler))
     app.add_handler(CommandHandler("sum", summarize_handler))
     app.add_handler(CommandHandler("summarize", summarize_handler))
-    app.add_handler(CommandHandler("promt", promt_handler))
+    app.add_handler(CommandHandler("promt", prompt_handler))
+    app.add_handler(CommandHandler("prompt", prompt_handler))
     app.add_handler(CommandHandler("stats", stats_handler))
     app.add_handler(CommandHandler("statt", stats_handler))
     app.add_handler(CommandHandler("stat", stats_handler))

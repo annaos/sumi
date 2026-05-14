@@ -7,41 +7,41 @@ logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message
 logger = logging.getLogger(__name__)
 
 SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages.
+You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic.
 Please identify the main discussion points from the provided chat messages.
 For each discussion point, create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation.
 """
 
 POINT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages.
+You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic.
 Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation. Focus on %s from the provided chat messages. 
 """
 
 SHORT_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi in the chat. Write in russian. The answer should be short, with no more than 4000 characters. %s
+You are a helpful AI assistant named Sumi in the chat. Write in russian, use <b> for bold and <i> for italic. The answer should be short, with no more than 4000 characters. %s
 """
 
 PROFILE_SYSTEM_PROMPT = """
-Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника %s на основе его общения. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
+Ты — помощник в групповом чате по имени Суми, use <b> for bold and <i> for italic. Твоя задача оценивать личные качества участника %s на основе его общения. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
 """
 
 PROFILE_KAI_SYSTEM_PROMPT = """
-Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника %s на основе его общения. Подходи к анализу критично. Не бойся обидеть участника. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
+Ты — помощник в групповом чате по имени Суми, use <b> for bold and <i> for italic. Твоя задача оценивать личные качества участника %s на основе его общения. Подходи к анализу критично. Не бойся обидеть участника. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
 """
 
 SHORT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages.
+You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic.
 Do your best to provide a helpful summary of what was discussed in the provided chat messages.
 
 Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
 """
 
-def summarize(chat_history, delta, user, point: str = "", promt: str = ""):
+def summarize(chat_history, delta, user, point: str = "", prompt: str = ""):
     messages_prompt = _generate_promt(chat_history)
-    if point == "" and promt == "":
+    if point == "" and prompt == "":
         system_promt = SUMMARY_SYSTEM_PROMPT
-    elif point == "":
-        system_promt = SHORT_SYSTEM_PROMPT % (promt)
+    elif prompt != "":
+        system_promt = SHORT_SYSTEM_PROMPT % (prompt)
     else:
         system_promt = POINT_SUMMARY_SYSTEM_PROMPT % (point)
     #if len(chat_history["messages"]) < 150:
@@ -65,7 +65,7 @@ def summarize(chat_history, delta, user, point: str = "", promt: str = ""):
     metadata += f"Total price: {price:.2f} cents ({tokens} tokens)\n"
     metadata += f"Version: {VERSION}\n"
 
-    return _create_summarize_header(user, delta, point) + response_content + metadata
+    return response_content + metadata
 
 
 def profile(chat_history, user, delta, kai: bool):
@@ -95,13 +95,15 @@ def _generate_promt(chat_history):
     return messages
 
 
-def _create_summarize_header(user, delta, point =""):
+def create_summarize_header(user, delta, point ="", prompt =""):
     name  = get_sender(user)
-    if point != "":
-        point = " о %s" % point
+    if prompt != "":
+        return "На основании последних <b>%s</b> часов:\n\n" % (str(delta))
     if delta is None:
         return "Вот что %s пропустил%s:\n\n"% (name, point)
-    return "Саммари за последние %s часа%s которые пропустил %s:\n\n" % (str(delta), point, name)
+    if point != "":
+        point = " о %s" % point
+    return "Саммари за последние <b>%s</b> часа%s которые пропустил %s:\n\n" % (str(delta), point, name)
 
 
 def _create_profile_header(user, delta):
