@@ -17,6 +17,10 @@ You are a helpful AI assistant named Sumi that summarizes the chat messages.
 Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation. Focus on %s from the provided chat messages. 
 """
 
+SHORT_SYSTEM_PROMPT = """
+You are a helpful AI assistant named Sumi in the chat. Write in russian. %s
+"""
+
 PROFILE_SYSTEM_PROMPT = """
 Ты — помощник в групповом чате по имени Суми. Твоя задача оценивать личные качества участника %s на основе его общения. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
 """
@@ -32,10 +36,12 @@ Do your best to provide a helpful summary of what was discussed in the provided 
 Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
 """
 
-def summarize(chat_history, delta, user, point: str):
+def summarize(chat_history, delta, user, point: str = "", promt: str = ""):
     messages_prompt = _generate_promt(chat_history)
-    if point == "":
+    if point == "" and promt == "":
         system_promt = SUMMARY_SYSTEM_PROMPT
+    elif point == "":
+        system_promt = SHORT_SYSTEM_PROMPT % (promt)
     else:
         system_promt = POINT_SUMMARY_SYSTEM_PROMPT % (point)
     #if len(chat_history["messages"]) < 150:
@@ -71,7 +77,7 @@ def profile(chat_history, user, delta, kai: bool):
     in_tokens = completion.usage.prompt_tokens
     out_tokens = completion.usage.completion_tokens
     tokens = completion.usage.total_tokens
-    price = in_tokens / 1000000 * 15 + out_tokens / 1000000 * 60
+    price = in_tokens / 1000000 * 5 + out_tokens / 1000000 * 30
     metadata += f"Total price: {price:.2f} cents ({tokens} tokens)\n"
     metadata += f"Version: {VERSION}\n"
 

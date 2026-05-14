@@ -361,6 +361,49 @@ async def base_profile_handler(kai: bool, update: Update, context: CallbackConte
     await response_message.edit_text(profile_generator)
 
 
+async def promt_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask promt_handler with update %s", update)
+    if update.message is None:
+        logger.info("No message provided. Possible edited message. Nothing done.")
+        return
+
+    chat_id = update.message.chat_id
+    if not is_active_chat(chat_id) and not update.message.from_user.id in await _get_admin_ids(context.bot, chat_id):
+        return
+
+    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
+
+    try:
+        if not message_id is None:
+            chat_history = gch.get_chat_history_by_message_id(chat_id, message_id)
+            delta = get_time_delta(chat_history)
+        else:
+            timestamp = (datetime.now() - delta).isoformat()
+            chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
+    except FileNotFoundError:
+        await update.message.reply_text("There is no chat history yet. Maybe I was just added to the chat.")
+        return
+    except Exception:
+        logger.exception("Error while trying to retrieve the chat history.")
+        await update.message.reply_text("Something went wrong while trying to retrieve the chat history.")
+        return
+
+    if len(chat_history["messages"]) == 0:
+        await update.message.reply_text("No messages found to summarize.")
+        return
+
+    response_message = await update.message.reply_text("Generating summary... Please wait.")
+    try:
+        promt = get_point(context.args)
+        summary_generator = summarize(chat_history, delta, update.message.from_user, promt=promt)
+        gch.updateLastCall(chat_id)
+    except Exception:
+        logger.exception("An error occurred while generating the summary.")
+        summary_generator = "An error occurred while generating the summary."
+
+    await response_message.edit_text(summary_generator)
+
+
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask summarize_handler with update %s", update)
     if update.message is None:
@@ -400,7 +443,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
     response_message = await update.message.reply_text("Generating summary... Please wait.")
     try:
         point = get_point(context.args)
-        summary_generator = summarize(chat_history, delta, update.message.from_user, point)
+        summary_generator = summarize(chat_history, delta, update.message.from_user, point=point)
         gch.updateLastCall(chat_id)
     except Exception:
         logger.exception("An error occurred while generating the summary.")
@@ -475,6 +518,7 @@ def main():
     app.add_handler(MessageHandler((filters.TEXT & (~filters.COMMAND)) | filters.CAPTION, message_handler))
     app.add_handler(CommandHandler("sum", summarize_handler))
     app.add_handler(CommandHandler("summarize", summarize_handler))
+    app.add_handler(CommandHandler("promt", promt_handler))
     app.add_handler(CommandHandler("stats", stats_handler))
     app.add_handler(CommandHandler("statt", stats_handler))
     app.add_handler(CommandHandler("stat", stats_handler))
