@@ -7,13 +7,13 @@ logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message
 logger = logging.getLogger(__name__)
 
 SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic.
+You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic. The answer should be short, with no more than 4000 characters
 Please identify the main discussion points from the provided chat messages.
 For each discussion point, create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation.
 """
 
 POINT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic.
+You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic. The answer should be short, with no more than 4000 characters
 Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation. Focus on %s from the provided chat messages. 
 """
 
