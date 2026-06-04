@@ -153,6 +153,7 @@ async def shut_handler(update: Update, context: CallbackContext) -> None:
         answer = generate_chain_joke_message(gch.get_message_history_by_message(mes))
         if answer:
             await mes.reply_text(answer)
+            await update.message.delete()
 
     if mes is None:
         await update.message.reply_text("О чём шутить?")
