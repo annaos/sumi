@@ -46,7 +46,7 @@ def create_statistic(chat_history, delta):
         place += 1
 
     statistic += _get_tags(delta, chat_history["chat_id"], sorted_messages)
-    return statistic.replace("!","\!").replace(".","\.").replace("-","\-")
+    return statistic.replace("!","\!").replace(".","\.").replace("-","\-").replace("_","\_")
 
 
 def create_wordle_statistic(chat_history, delta):
@@ -131,7 +131,7 @@ def _get_tags(delta: datetime, chat_id, sorted_messages):
     diff_members = [v for v in members if v["id"] not in sorted_messages.keys()]
     for mem in diff_members:
         if mem["username"] != None:
-            tags += "@" + mem["username"].replace("_", "\\_") + " "
+            tags += "@" + mem["username"] + " "
         elif mem["id"] != None:
             tags += "[" + mem["fullname"] + "](tg://user?id=" + str(mem["id"]) + ") "
 

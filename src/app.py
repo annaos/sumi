@@ -403,7 +403,7 @@ async def prompt_handler(update: Update, context: CallbackContext) -> None:
         logger.exception("An error occurred while generating.")
         summary_generator = "An error occurred while generating."
 
-    await response_message.edit_text(header + summary_generator, parse_mode=ParseMode.HTML)
+    await response_message.edit_text((header + summary_generator)[0:4096], parse_mode=ParseMode.HTML)
 
 
 async def summarize_handler(update: Update, context: CallbackContext) -> None:
@@ -452,7 +452,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
         logger.exception("An error occurred while generating the summary.")
         summary_generator = "An error occurred while generating the summary."
 
-    await response_message.edit_text(header + summary_generator, parse_mode=ParseMode.HTML)
+    await response_message.edit_text((header + summary_generator)[0:4096], parse_mode=ParseMode.HTML)
 
 
 def error_handler(update: Update, context: CallbackContext):
