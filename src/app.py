@@ -117,7 +117,8 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
             try:
               await message.set_reaction(reaction=emoji)
             except BadRequest as e:
-                logger.exception(repr(e) + ": Try to set invalid reaktion: " + emoji)
+                logger.error(repr(e) + ": Try to set invalid reaktion: " + emoji)
+                await message.set_reaction(reaction=ReactionEmoji.HEART_WITH_ARROW)
 
         answer = answer_felix(message, is_edited)
         if answer:
@@ -360,7 +361,7 @@ async def base_profile_handler(kai: bool, update: Update, context: CallbackConte
         logger.exception("An error occurred while generating the profiling.")
         profile_generator = "An error occurred while generating the profiling."
 
-    await response_message.edit_text(profile_generator)
+    await response_message.edit_text(profile_generator, parse_mode=ParseMode.HTML)
 
 
 async def prompt_handler(update: Update, context: CallbackContext) -> None:
