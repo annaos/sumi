@@ -6,35 +6,54 @@ from src.helpers.util import ask_ai, get_sender
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic, don't use <br> or <p>. The answer should be short, with no more than 4000 characters
-Please identify the main discussion points from the provided chat messages.
-For each discussion point, create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation.
+FORMAT_RULES = """
+Formatting rules:
+- Answer in Russian, matching the informal tone and style of the chat itself.
+- Format for Telegram HTML: only <b> (bold) and <i> (italic) are allowed. Never use <br>, <p> or any other tags. Separate paragraphs with an empty line.
+- The whole answer must be shorter than 4000 characters.
 """
 
-POINT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic, don't use <br> or <p>. The answer should be short, with no more than 4000 characters
-Create a brief paragraph in russian that clearly and concisely captures the essence of the conversation. Use same style, as in the conversation. Focus on %s from the provided chat messages. 
+CHAT_INPUT_DESCRIPTION = """
+You are Sumi, an AI participant of a group chat. You will receive the chat messages one per line in the form "sender: message".
 """
 
-SHORT_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi in the chat. Write in russian, use <b> for bold and <i> for italic, don't use <br> or <p>. The answer should be short, with no more than 4000 characters. %s
-"""
+SUMMARY_SYSTEM_PROMPT = f"""
+{CHAT_INPUT_DESCRIPTION}
+Summarize the conversation:
+- Identify the main discussion topics, ordered from most to least discussed.
+- For each topic write one brief paragraph: start with the topic in <b>bold</b>, then capture the essence of the discussion — who argued for what and how it ended (agreement, open question, joke).
+- Base the summary only on the provided messages, never add facts of your own. Keep the participants' names exactly as written.
+{FORMAT_RULES}"""
 
-PROFILE_SYSTEM_PROMPT = """
-Ты — помощник в групповом чате по имени Суми, use <b> for bold and <i> for italic, don't use <br> or <p>. Твоя задача оценивать личные качества участника %s на основе его общения. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
-"""
+POINT_SUMMARY_SYSTEM_PROMPT = f"""
+{CHAT_INPUT_DESCRIPTION}
+Summarize only the part of the conversation related to this topic: %s
+- Write one or two brief paragraphs: what was said about the topic, who said what, and what conclusion (if any) was reached.
+- Ignore unrelated messages. If the topic was barely or never mentioned, honestly say so instead of inventing content.
+- Base the summary only on the provided messages, never add facts of your own. Keep the participants' names exactly as written.
+{FORMAT_RULES}"""
 
-PROFILE_KAI_SYSTEM_PROMPT = """
-Ты — помощник в групповом чате по имени Суми, use <b> for bold and <i> for italic, don't use <br> or <p>. Твоя задача оценивать личные качества участника %s на основе его общения. Подходи к анализу критично. Не бойся обидеть участника. Используй тот же стиль общения, что и в сообщениях. Используй конкретные примеры. Если возможно, укажи предпочтения и политические взгляды участника. Ответь на русском не больше чем в четырёх предложениях. Каждое предложение в новом абзаце.
-"""
+SHORT_SYSTEM_PROMPT = f"""
+{CHAT_INPUT_DESCRIPTION}
+Follow this instruction from a chat participant, applying it to the provided messages: %s
+{FORMAT_RULES}"""
 
-SHORT_SUMMARY_SYSTEM_PROMPT = """
-You are a helpful AI assistant named Sumi that summarizes the chat messages, use <b> for bold and <i> for italic, don't use <br> or <p>.
-Do your best to provide a helpful summary of what was discussed in the provided chat messages.
+PROFILE_SYSTEM_PROMPT = f"""
+{CHAT_INPUT_DESCRIPTION}
+Твоя задача — описать личные качества участника %s на основе его сообщений:
+- Опирайся только на сообщения этого участника, приводи конкретные примеры из них.
+- Если возможно, укажи предпочтения и политические взгляды участника.
+- Ответь не больше чем в четырёх предложениях. Каждое предложение — отдельный абзац.
+{FORMAT_RULES}"""
 
-Reply with a short paragraph summarizing what are the main points of the chat messages in russian.
-"""
+PROFILE_KAI_SYSTEM_PROMPT = f"""
+{CHAT_INPUT_DESCRIPTION}
+Твоя задача — критично описать личные качества участника %s на основе его сообщений:
+- Подходи к анализу критично, не бойся обидеть участника.
+- Опирайся только на сообщения этого участника, приводи конкретные примеры из них.
+- Если возможно, укажи предпочтения и политические взгляды участника.
+- Ответь не больше чем в четырёх предложениях. Каждое предложение — отдельный абзац.
+{FORMAT_RULES}"""
 
 def summarize(chat_history, delta, user, point: str = "", prompt: str = ""):
     messages_prompt = _generate_promt(chat_history)
@@ -44,8 +63,6 @@ def summarize(chat_history, delta, user, point: str = "", prompt: str = ""):
         system_promt = SHORT_SYSTEM_PROMPT % (prompt)
     else:
         system_promt = POINT_SUMMARY_SYSTEM_PROMPT % (point)
-    #if len(chat_history["messages"]) < 150:
-    #    system_promt = SHORT_SUMMARY_SYSTEM_PROMPT
     logger.info('prompt: %s', system_promt)
     # f = open("demofile2.txt", "a")
     # f.write(messages_prompt)
