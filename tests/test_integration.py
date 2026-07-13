@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 import unittest
@@ -6,6 +7,7 @@ from unittest.mock import patch
 
 from telegram import Chat, Message, User
 
+import src.core.history_storage as storage
 from src.core.save_message import save_message, save_private_sender, get_private_sender_id
 from src.core.get_chat_history import (
     get_chat_history_by_message_id,
@@ -39,7 +41,7 @@ class HistoryDirectoryTestCase(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         self.history_dir = tmp.name
         for target in ("src.core.save_message.HISTORY_SAVE_DIRECTORY",
-                       "src.core.get_chat_history.HISTORY_SAVE_DIRECTORY"):
+                       "src.core.history_storage.HISTORY_SAVE_DIRECTORY"):
             patcher = patch(target, self.history_dir)
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -143,6 +145,64 @@ class StatisticFromSavedHistoryTestCase(HistoryDirectoryTestCase):
         self.assertIn("Anna: 2 сообщений", statistic)
         self.assertIn("Sven: 1 сообщение", statistic)
         self.assertLess(statistic.index("Anna"), statistic.index("Sven"))
+
+
+class ShardedStorageTestCase(HistoryDirectoryTestCase):
+
+    def _chat_dir(self):
+        return os.path.join(self.history_dir, "chat_%d" % CHAT_ID)
+
+    def test_saved_messages_land_in_monthly_shard_files(self):
+        save_message(_tg_message(1, "сегодня"), is_edited=False)
+        last_month = (datetime.now() - timedelta(days=40)).isoformat()
+        storage.append_message(CHAT_ID, "Test Chat", {
+            "message_id": 0, "timestamp": last_month, "sender_id": 1,
+            "sender": "Anna", "reply_to": None, "message": "давно",
+        })
+
+        shards = [f for f in os.listdir(self._chat_dir()) if f.startswith("messages_")]
+        self.assertEqual(2, len(shards))
+
+        history = get_chat_history_by_message_id(CHAT_ID, 0)
+        self.assertEqual(["давно", "сегодня"], [m["message"] for m in history["messages"]])
+
+    def test_broken_shard_is_quarantined_and_history_survives(self):
+        save_message(_tg_message(1, "будет потеряно"), is_edited=False)
+        current_shard = "messages_%s.json" % datetime.now().isoformat()[:7]
+        with open(os.path.join(self._chat_dir(), current_shard), 'w') as file:
+            file.write("{broken json")
+
+        save_message(_tg_message(2, "новое"), is_edited=False)
+
+        history = get_chat_history_by_message_id(CHAT_ID, 0)
+        self.assertEqual(["новое"], [m["message"] for m in history["messages"]])
+        self.assertIn(current_shard + ".broken", os.listdir(self._chat_dir()))
+
+    def test_legacy_single_file_history_is_migrated_on_read(self):
+        legacy_path = os.path.join(self.history_dir, "chat_history_%d.json" % CHAT_ID)
+        with open(legacy_path, 'w') as file:
+            json.dump({
+                "chat_id": CHAT_ID,
+                "title": "Old Chat",
+                "timestamp": "2026-06-01T10:00:00",
+                "summary_created_at": "2026-06-01T10:00:00",
+                "cleaned_at": "2026-06-01T10:00:00",
+                "messages": [{
+                    "message_id": 1, "timestamp": "2026-06-15T10:00:00", "sender_id": 1,
+                    "sender": "Anna", "reply_to": None, "message": "старое сообщение",
+                }],
+            }, file)
+
+        history = get_chat_history_by_message_id(CHAT_ID, 0)
+
+        self.assertEqual(["старое сообщение"], [m["message"] for m in history["messages"]])
+        self.assertEqual("Old Chat", history["title"])
+        self.assertFalse(os.path.exists(legacy_path))
+        self.assertTrue(os.path.exists(legacy_path + ".migrated"))
+
+        save_message(_tg_message(2, "новое сообщение"), is_edited=False)
+        history = get_chat_history_by_message_id(CHAT_ID, 0)
+        self.assertEqual(2, len(history["messages"]))
 
 
 class PrivateSenderRoundTripTestCase(HistoryDirectoryTestCase):

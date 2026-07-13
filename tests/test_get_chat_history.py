@@ -1,6 +1,6 @@
+import copy
 import unittest
-from unittest.mock import patch, mock_open, Mock
-import json
+from unittest.mock import patch, Mock
 
 from src.core.get_chat_history import (
     get_chat_history_by_message_id,
@@ -33,40 +33,41 @@ SAMPLE_HISTORY = {
 }
 
 
-def _open_sample():
-    return patch("builtins.open", new_callable=mock_open, read_data=json.dumps(SAMPLE_HISTORY))
+def _patch_storage():
+    return patch("src.core.get_chat_history.storage.load_history",
+                 side_effect=lambda chat_id: copy.deepcopy(SAMPLE_HISTORY))
 
 
 class GetChatHistoryTestCase(unittest.TestCase):
 
     def test_by_message_id(self):
-        with _open_sample():
+        with _patch_storage():
             history = get_chat_history_by_message_id(-123, 11)
         self.assertEqual([11, 16], [m["message_id"] for m in history["messages"]])
 
     def test_by_message_id_keeps_metadata(self):
-        with _open_sample():
+        with _patch_storage():
             history = get_chat_history_by_message_id(-123, 11)
         self.assertEqual(-123, history["chat_id"])
         self.assertEqual(SAMPLE_HISTORY["summary_created_at"], history["summary_created_at"])
 
     def test_by_timestamp(self):
-        with _open_sample():
+        with _patch_storage():
             history = get_chat_history_by_timestamp(-123, "2026-07-11T00:00:00")
         self.assertEqual([11, 16], [m["message_id"] for m in history["messages"]])
 
     def test_by_timestamp_nothing_matches(self):
-        with _open_sample():
+        with _patch_storage():
             history = get_chat_history_by_timestamp(-123, "2026-07-13T00:00:00")
         self.assertEqual([], history["messages"])
 
     def test_by_user_id(self):
-        with _open_sample():
+        with _patch_storage():
             history = get_chat_history_by_user_id(-123, 1, "2026-07-01T00:00:00")
         self.assertEqual([10, 16], [m["message_id"] for m in history["messages"]])
 
     def test_by_user_id_respects_timestamp(self):
-        with _open_sample():
+        with _patch_storage():
             history = get_chat_history_by_user_id(-123, 1, "2026-07-11T00:00:00")
         self.assertEqual([16], [m["message_id"] for m in history["messages"]])
 
@@ -75,14 +76,14 @@ class GetMessageHistoryByMessageTestCase(unittest.TestCase):
 
     def test_follows_reply_chain(self):
         message = Mock(chat_id=-123, message_id=16)
-        with _open_sample():
+        with _patch_storage():
             history = get_message_history_by_message(message)
         self.assertEqual(["First", "Second", "Third"], [m["message"] for m in history])
 
     def test_unknown_message_falls_back_to_message_itself(self):
         message = Mock(chat_id=-123, message_id=99, text="Fresh", caption=None)
         message.from_user.full_name = "Anna Os"
-        with _open_sample():
+        with _patch_storage():
             history = get_message_history_by_message(message)
         self.assertEqual([{"sender": "Anna Os", "message": "Fresh"}], history)
 
