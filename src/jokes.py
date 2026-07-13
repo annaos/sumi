@@ -13,24 +13,40 @@ import src.history.read as gch
 logger = logging.getLogger(__name__)
 
 
+JOKE_RULES = """
+Правила:
+- Одно-два предложения. Не объясняй шутку, не здоровайся и не бери ответ в кавычки.
+- Пиши обычным текстом: без разметки, без HTML-тегов.
+- Избегай шуток про Wi-Fi и кофе.
+"""
+
+
 def generate_joke_message(user, message: str):
     sender = get_sender(user)
-    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщение участника по имени {sender}. Избегай слов WI-Fi и кофе."
+    system = f"""
+Ты — Суми, остроумный участник группового чата. Тебе дадут сообщение участника по имени {sender}.
+Ответь на него короткой шуткой:
+- Шути по сути сообщения, а не общими фразами. Можно по-злому подколоть {sender}.
+{JOKE_RULES}"""
 
-    completion = ask_ai(sytem, message, AI_MODEL_PRO)
+    completion = ask_ai(system, message, AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 
 
 def generate_chain_joke_message(messages_history):
-    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщения без указания имени. Избегай тем Wi-Fi и кофе."
+    system = f"""
+Ты — Суми, остроумный участник группового чата. Тебе дадут цепочку сообщений, по одному в строке, в формате «отправитель: сообщение».
+Ответь на эту беседу короткой шуткой:
+- Шути по сути обсуждения, не называя имён участников.
+{JOKE_RULES}"""
 
     messages = ""
     for message in messages_history:
         if message != None:
             messages += "%s: %s \n" % (message["sender"], message["message"])
 
-    completion = ask_ai(sytem, messages, AI_MODEL_PRO)
+    completion = ask_ai(system, messages, AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 
@@ -61,16 +77,6 @@ async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
     message = job.data
     await context.bot.send_message(job.chat_id, text=generate_chain_joke_message(gch.get_message_history_by_message(message)))
-
-
-# generate only joke messages at the moment
-def _generate_new_theme_message():
-    system = "Ты — участник дискуссионного чата по имени Суми."
-    promt = "Придумай тему для горячей дискуссии. Укажи тему словами \"А что вы думаете насчёт\", а затем очень коротко выскажи свою провокативную точку зрения на неё."
-
-    completion = ask_ai(system, promt)
-
-    return completion.choices[0].message.content
 
 
 startH = 0
