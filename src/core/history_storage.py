@@ -1,9 +1,9 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from src.config.common import HISTORY_SAVE_DIRECTORY, CLEAN_LIMIT_DAYS, CLEAN_FREQUENCY_HOURS
+from src.config.common import HISTORY_SAVE_DIRECTORY
 
 logger = logging.getLogger(__name__)
 
@@ -55,27 +55,6 @@ def update_meta(chat_id, **fields):
     _write_json(_meta_path(chat_id), meta)
 
 
-def clean_history_if_due(chat_id):
-    if not os.path.isdir(_chat_dir(chat_id)):
-        return
-    meta = _load_meta(chat_id)
-    due_limit = (datetime.now() - timedelta(hours=CLEAN_FREQUENCY_HOURS)).isoformat()
-    if "cleaned_at" in meta and meta["cleaned_at"] >= due_limit:
-        return
-
-    limit = (datetime.now() - timedelta(days=CLEAN_LIMIT_DAYS)).isoformat()
-    directory = _chat_dir(chat_id)
-    for shard in _shard_files(chat_id):
-        path = os.path.join(directory, shard)
-        month = _shard_month(shard)
-        if month < _month(limit):
-            os.remove(path)
-        elif month == _month(limit):
-            messages = [m for m in _read_json_list(path) if m.get("timestamp") > limit]
-            _write_json(path, messages)
-    update_meta(chat_id, cleaned_at=datetime.now().isoformat())
-
-
 def list_chat_ids():
     if not os.path.isdir(HISTORY_SAVE_DIRECTORY):
         return []
@@ -123,7 +102,6 @@ def _ensure_meta(chat_id, title):
         "title": title,
         "timestamp": now,
         "summary_created_at": now,
-        "cleaned_at": now,
     })
 
 
@@ -193,10 +171,6 @@ def _shard_files(chat_id):
         return []
     return sorted(f for f in os.listdir(directory)
                   if f.startswith(SHARD_PREFIX) and f.endswith(SHARD_SUFFIX))
-
-
-def _shard_month(file_name):
-    return file_name[len(SHARD_PREFIX):-len(SHARD_SUFFIX)]
 
 
 def _month(timestamp):

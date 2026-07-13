@@ -25,8 +25,6 @@ def save_message(message: Message, is_edited: bool):
     else:
         storage.append_message(chat_id, message.chat.title, message_data)
 
-    storage.clean_history_if_due(chat_id)
-
     if is_active_chat(chat_id):
         member.update_member(chat_id, message.from_user)
 

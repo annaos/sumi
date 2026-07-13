@@ -2,11 +2,9 @@ import json
 import os
 import tempfile
 import unittest
-from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import src.core.history_storage as storage
-from src.config.common import CLEAN_LIMIT_DAYS
 
 CHAT_ID = -123
 
@@ -160,37 +158,15 @@ class LegacyMigrationTestCase(StorageTestCase):
         self.assertEqual([CHAT_ID], storage.list_chat_ids())
 
 
-class CleanHistoryTestCase(StorageTestCase):
+class OldMessagesAreKeptTestCase(StorageTestCase):
 
-    def test_expired_month_shard_is_deleted(self):
-        expired = (datetime.now() - timedelta(days=CLEAN_LIMIT_DAYS + 40)).isoformat()
-        storage.append_message(CHAT_ID, "Test Chat", _message(1, expired))
-        storage.append_message(CHAT_ID, "Test Chat", _message(2, datetime.now().isoformat()))
-        storage.update_meta(CHAT_ID, cleaned_at=(datetime.now() - timedelta(days=2)).isoformat())
-
-        storage.clean_history_if_due(CHAT_ID)
+    def test_saving_new_messages_does_not_delete_old_ones(self):
+        storage.append_message(CHAT_ID, "Test Chat", _message(1, "2020-01-01T10:00:00"))
+        storage.append_message(CHAT_ID, "Test Chat", _message(2, "2026-07-13T10:00:00"))
 
         history = storage.load_history(CHAT_ID)
-        self.assertEqual([2], [m["message_id"] for m in history["messages"]])
-        self.assertNotIn("messages_%s.json" % expired[:7], self._files())
-
-    def test_recently_cleaned_chat_is_untouched(self):
-        expired = (datetime.now() - timedelta(days=CLEAN_LIMIT_DAYS + 40)).isoformat()
-        storage.append_message(CHAT_ID, "Test Chat", _message(1, expired))
-
-        storage.clean_history_if_due(CHAT_ID)
-
-        history = storage.load_history(CHAT_ID)
-        self.assertEqual([1], [m["message_id"] for m in history["messages"]])
-
-    def test_cleaning_updates_cleaned_at(self):
-        storage.append_message(CHAT_ID, "Test Chat", _message(1, datetime.now().isoformat()))
-        old_cleaned_at = (datetime.now() - timedelta(days=2)).isoformat()
-        storage.update_meta(CHAT_ID, cleaned_at=old_cleaned_at)
-
-        storage.clean_history_if_due(CHAT_ID)
-
-        self.assertGreater(storage.load_history(CHAT_ID)["cleaned_at"], old_cleaned_at)
+        self.assertEqual([1, 2], [m["message_id"] for m in history["messages"]])
+        self.assertIn("messages_2020-01.json", self._files())
 
 
 if __name__ == '__main__':
