@@ -1,9 +1,9 @@
 import os
 
 # Make sure to add this directory to .gitignore"
-POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "polls"))
-HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "chats_history"))
-HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "members_history"))
+POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "polls"))
+HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "chats_history"))
+HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "members_history"))
 
 SUMMARY_HOURS_LIMIT = 5
 
