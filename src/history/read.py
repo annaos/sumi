@@ -2,7 +2,7 @@ from datetime import datetime
 
 from telegram import Message
 
-import src.core.history_storage as storage
+import src.history.storage as storage
 
 def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
     chat_history = storage.load_history(chat_id)

@@ -1,14 +1,49 @@
 import logging
-from datetime import datetime,timedelta, time
+from datetime import datetime, timedelta, time
 
-from telegram.ext import CallbackContext, ContextTypes
 from telegram import Message
+from telegram.ext import CallbackContext, ContextTypes
 
-from src.config.common import NEW_MESSAGE_MINUTES
-from src.helpers.util import ask_ai, generate_joke_message, generate_chain_joke_message
-import src.core.get_chat_history as gch
+from src.ai import ask_ai
+from src.config import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY, AI_MODEL_PRO, NEW_MESSAGE_MINUTES
+from src.members.registry import get_sender
+from src.utils import is_active_participant
+import src.history.read as gch
 
 logger = logging.getLogger(__name__)
+
+
+def generate_joke_message(user, message: str):
+    sender = get_sender(user)
+    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщение участника по имени {sender}. Избегай слов WI-Fi и кофе."
+
+    completion = ask_ai(sytem, message, AI_MODEL_PRO)
+
+    return completion.choices[0].message.content
+
+
+def generate_chain_joke_message(messages_history):
+    sytem = f"Ты участник дискуссионного чата по имени Суми. Ответь короткой шуткой на сообщения без указания имени. Избегай тем Wi-Fi и кофе."
+
+    messages = ""
+    for message in messages_history:
+        if message != None:
+            messages += "%s: %s \n" % (message["sender"], message["message"])
+
+    completion = ask_ai(sytem, messages, AI_MODEL_PRO)
+
+    return completion.choices[0].message.content
+
+
+def answer_felix(message: Message, is_edited: bool):
+    if is_edited == True:
+        return None
+    is_active_message = is_active_participant(message.from_user) and message.message_id % ACTIVE_ANSWER_FREQUENCY == 0
+    is_lucky_message = message.message_id % ALL_ANSWER_FREQUENCY == 0
+    if is_active_message or is_lucky_message:
+        return generate_joke_message(message.from_user, message.text if message.text else message.caption)
+    return None
+
 
 def new_delay_message(chat_id, message: Message, context: CallbackContext):
     current_jobs = context.job_queue.get_jobs_by_name(str(chat_id))

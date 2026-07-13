@@ -3,8 +3,8 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from src.core.poll import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
-from src.helpers.util import get_poll_options
+from src.polls import create_poll, save_anonym_poll_answer, stop_poll, get_poll_message_id
+from src.utils import get_poll_options
 
 logger = logging.getLogger(__name__)
 

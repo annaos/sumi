@@ -2,10 +2,10 @@ import json
 import os
 from telegram import Message
 from datetime import datetime
-from src.config.common import HISTORY_SAVE_DIRECTORY
-from src.helpers.util import is_active_chat, get_logger
-import src.helpers.member as member
-import src.core.history_storage as storage
+from src.config import HISTORY_SAVE_DIRECTORY
+from src.utils import is_active_chat, get_logger
+import src.members.registry as member
+import src.history.storage as storage
 
 def save_message(message: Message, is_edited: bool):
     chat_id = message.chat_id

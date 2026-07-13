@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 import json
-from src.config.common import HISTORY_MEMBERS_DIRECTORY
+from src.config import HISTORY_MEMBERS_DIRECTORY
 from telegram import User
 
 

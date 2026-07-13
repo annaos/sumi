@@ -1,7 +1,8 @@
 import logging
 
-from src.config.common import VERSION
-from src.helpers.util import ask_ai, get_sender
+from src.ai import ask_ai
+from src.config import VERSION
+from src.members.registry import get_sender
 
 logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 import json
-from src.config.common import HISTORY_MEMBERS_DIRECTORY
+from src.config import HISTORY_MEMBERS_DIRECTORY
 from telegram import User
 
 
@@ -41,6 +41,13 @@ def get_real_name(user: User, chat_id: str):
     for i, member in enumerate(members):
         if member["id"] == user.id:
             return member["realname"] if "realname" in member else user.full_name
+    return user.full_name
+
+
+def get_sender(user) -> str:
+    chats = os.getenv('ACTIVE_CHAT_IDS').split(",")
+    if len(chats) > 0:
+        return get_real_name(user, chats[0])
     return user.full_name
 
 

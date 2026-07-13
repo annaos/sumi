@@ -1,7 +1,7 @@
 import unittest
 from datetime import timedelta
 
-from src.core.statistic import (
+from src.statistic import (
     create_statistic,
     _convert_history,
     _count_words,

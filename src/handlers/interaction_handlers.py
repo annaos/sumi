@@ -6,8 +6,8 @@ from telegram.constants import ReactionEmoji
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-import src.core.get_chat_history as gch
-from src.helpers.util import generate_chain_joke_message
+import src.history.read as gch
+from src.jokes import generate_chain_joke_message
 
 logger = logging.getLogger(__name__)
 

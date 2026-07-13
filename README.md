@@ -78,7 +78,7 @@ python3 -m unittest tests.test_util
 python3 -m unittest tests.test_util.GetBoundaryTestCase.test_hours
 ```
 
-The code is organized in three layers under `src/`: `handlers/` (Telegram commands), `core/` (summaries, statistics, storage, member reconciliation), and `helpers/` (parsing, OpenAI access, member files). Configuration constants live in `src/config/common.py`. See `CLAUDE.md` for architecture details and conventions.
+The code under `src/` is organized by feature: `handlers/` (all Telegram commands), `history/` (message storage), `members/` (member tracking), plus one module per feature (`summarize.py`, `statistic.py`, `jokes.py`, `polls.py`) on top of shared `ai.py`, `utils.py`, and `config.py`. See `CLAUDE.md` for architecture details and conventions.
 
 ## License
 

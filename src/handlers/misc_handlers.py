@@ -4,8 +4,8 @@ import os
 from telegram import Update, Chat
 from telegram.ext import CallbackContext
 
-import src.core.get_chat_history as gch
-from src.config.common import VERSION
+import src.history.read as gch
+from src.config import VERSION
 
 logger = logging.getLogger(__name__)
 

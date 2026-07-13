@@ -26,8 +26,8 @@ from src.handlers.stats_handlers import stats_handler, wordle_handler, green_wor
 from src.handlers.summarize_handlers import summarize_handler, prompt_handler
 from src.handlers.profile_handlers import profile_handler, profile_kai_handler
 from src.handlers.member_handlers import new_member, left_member, members_history_handler, chat_member_update
-from src.core.reconcile_members import reconcile_members
-from src.config.common import MEMBERS_RECONCILE_HOURS
+from src.members.reconcile import reconcile_members
+from src.config import MEMBERS_RECONCILE_HOURS
 from src.handlers.misc_handlers import help_handler, donate_handler, version_handler, list_handler, invite_handler
 
 load_dotenv()

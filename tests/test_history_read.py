@@ -2,7 +2,7 @@ import copy
 import unittest
 from unittest.mock import patch, Mock
 
-from src.core.get_chat_history import (
+from src.history.read import (
     get_chat_history_by_message_id,
     get_chat_history_by_timestamp,
     get_chat_history_by_user_id,
@@ -34,7 +34,7 @@ SAMPLE_HISTORY = {
 
 
 def _patch_storage():
-    return patch("src.core.get_chat_history.storage.load_history",
+    return patch("src.history.read.storage.load_history",
                  side_effect=lambda chat_id: copy.deepcopy(SAMPLE_HISTORY))
 
 

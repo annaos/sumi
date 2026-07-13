@@ -1,7 +1,7 @@
 import re
 import datetime
-import src.helpers.member as member
-from src.helpers.util import get_logger
+import src.members.registry as member
+from src.utils import get_logger
 
 def _create_header(delta):
     if delta is None:

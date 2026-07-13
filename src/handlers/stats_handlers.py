@@ -4,9 +4,9 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext
 
-from src.core.statistic import create_statistic, create_wordle_statistic, create_wordle_green_statistic, create_wordle_color_statistic
+from src.statistic import create_statistic, create_wordle_statistic, create_wordle_green_statistic, create_wordle_color_statistic
 from src.handlers.shared import fetch_chat_history, get_admin_ids
-from src.helpers.util import is_active_chat
+from src.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import src.core.history_storage as storage
+import src.history.storage as storage
 
 CHAT_ID = -123
 
@@ -26,7 +26,7 @@ class StorageTestCase(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.history_dir = tmp.name
-        patcher = patch("src.core.history_storage.HISTORY_SAVE_DIRECTORY", self.history_dir)
+        patcher = patch("src.history.storage.HISTORY_SAVE_DIRECTORY", self.history_dir)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.chat_dir = os.path.join(self.history_dir, "chat_%d" % CHAT_ID)

@@ -1,13 +1,28 @@
 import logging
 from datetime import datetime
 
-from telegram import Bot, Update
+from telegram import Bot, Message, MessageEntity, Update, User
 from telegram.ext import CallbackContext
 
-import src.core.get_chat_history as gch
-from src.helpers.util import get_statistic_boundary, get_time_delta
+import src.history.read as gch
+from src.members.registry import get_member_by_name
+from src.utils import get_statistic_boundary, get_time_delta
 
 logger = logging.getLogger(__name__)
+
+
+def get_user(message: Message) -> User|None:
+    if message.reply_to_message:
+        return message.reply_to_message.from_user
+    for entity in message.entities:
+        if entity.type == MessageEntity.TEXT_MENTION:
+             return entity.user
+        if entity.type == MessageEntity.MENTION :
+            username = message.text[entity.offset+1:entity.offset + entity.length]
+            memb = get_member_by_name(message.chat_id, username)
+            if memb is not None and memb["id"] is not None:
+                return User(id=memb["id"], first_name=memb["fullname"], username=memb["username"], is_bot=False)
+    return None
 
 
 async def fetch_chat_history(update: Update, context: CallbackContext):

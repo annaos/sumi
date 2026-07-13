@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 from telegram import Chat, Message, User
 
-import src.core.history_storage as storage
-from src.core.save_message import save_message, save_private_sender, get_private_sender_id
-from src.core.get_chat_history import (
+import src.history.storage as storage
+from src.history.save import save_message, save_private_sender, get_private_sender_id
+from src.history.read import (
     get_chat_history_by_message_id,
     get_chat_history_by_timestamp,
     get_chat_history_by_user_id,
@@ -17,7 +17,7 @@ from src.core.get_chat_history import (
     get_chat_list,
     updateLastCall,
 )
-from src.core.statistic import create_statistic
+from src.statistic import create_statistic
 
 CHAT_ID = -123
 
@@ -40,8 +40,8 @@ class HistoryDirectoryTestCase(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.history_dir = tmp.name
-        for target in ("src.core.save_message.HISTORY_SAVE_DIRECTORY",
-                       "src.core.history_storage.HISTORY_SAVE_DIRECTORY"):
+        for target in ("src.history.save.HISTORY_SAVE_DIRECTORY",
+                       "src.history.storage.HISTORY_SAVE_DIRECTORY"):
             patcher = patch(target, self.history_dir)
             patcher.start()
             self.addCleanup(patcher.stop)

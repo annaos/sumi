@@ -4,11 +4,11 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext
 
-import src.core.get_chat_history as gch
-from src.config.common import SUMMARY_HOURS_LIMIT
-from src.core.summarize import summarize, create_summarize_header
+import src.history.read as gch
+from src.config import SUMMARY_HOURS_LIMIT
+from src.summarize import summarize, create_summarize_header
 from src.handlers.shared import fetch_chat_history, get_admin_ids
-from src.helpers.util import is_active_chat, get_point
+from src.utils import is_active_chat, get_point
 
 logger = logging.getLogger(__name__)
 

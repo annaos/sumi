@@ -7,10 +7,10 @@ from telegram.constants import ReactionEmoji
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-from src.core.felix_special import answer_felix
-from src.core.new_message import new_delay_message
-from src.core.save_message import save_message, save_private_sender, get_private_sender_id
-from src.helpers.util import is_active_chat
+from src.jokes import answer_felix
+from src.jokes import new_delay_message
+from src.history.save import save_message, save_private_sender, get_private_sender_id
+from src.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
 
