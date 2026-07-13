@@ -4,9 +4,9 @@ from datetime import datetime,timedelta, time
 from telegram.ext import CallbackContext, ContextTypes
 from telegram import Message
 
-from config.common import NEW_MESSAGE_MINUTES
-from helpers.util import ask_ai, generate_joke_message, generate_chain_joke_message
-import core.get_chat_history as gch
+from src.config.common import NEW_MESSAGE_MINUTES
+from src.helpers.util import ask_ai, generate_joke_message, generate_chain_joke_message
+import src.core.get_chat_history as gch
 
 logger = logging.getLogger(__name__)
 

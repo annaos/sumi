@@ -1,7 +1,7 @@
 from telegram import Message
 
-from config.common import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY
-from helpers.util import generate_joke_message, is_active_participant
+from src.config.common import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY
+from src.helpers.util import generate_joke_message, is_active_participant
 
 def answer_felix(message: Message, is_edited: bool):
     if is_edited == True:

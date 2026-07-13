@@ -2,9 +2,9 @@ import json
 import os
 from telegram import Message
 from datetime import timedelta, datetime
-from config.common import HISTORY_SAVE_DIRECTORY, CLEAN_LIMIT_DAYS, CLEAN_FREQUENCY_HOURS
-from helpers.util import is_active_chat, get_logger
-import helpers.member as member
+from src.config.common import HISTORY_SAVE_DIRECTORY, CLEAN_LIMIT_DAYS, CLEAN_FREQUENCY_HOURS
+from src.helpers.util import is_active_chat, get_logger
+import src.helpers.member as member
 
 def save_message(message: Message, is_edited: bool):
     chat_id = message.chat_id

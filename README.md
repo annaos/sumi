@@ -47,9 +47,9 @@ Here you can also do it for last time or since the replied message.
    ACTIVE_NAMES=<names of users who often receive joke>
    MY_CHAT_ID=<your id to inform about personal messages to bot>
    ```
-4. Run the bot
+4. Run the bot (from the repository root)
    ```sh
-   python app.py
+   python -m src.app
    ```
 5. Add the bot to a group chat, send some messages and try to summarize them using the `/summarize` command.
 

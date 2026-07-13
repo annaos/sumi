@@ -4,8 +4,8 @@ import os
 import logging
 
 from telegram import Message, User, MessageEntity
-from config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
-from helpers.member import get_real_name, get_member_by_name
+from src.config.common import AI_MODEL, STATISTIC_HOURS, AI_MODEL_PRO
+from src.helpers.member import get_real_name, get_member_by_name
 import openai
 
 

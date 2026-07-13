@@ -4,7 +4,7 @@ from datetime import datetime
 
 from telegram import Message
 
-from config.common import HISTORY_SAVE_DIRECTORY, SUMMARY_HOURS_LIMIT
+from src.config.common import HISTORY_SAVE_DIRECTORY, SUMMARY_HOURS_LIMIT
 
 def get_chat_history_by_message_id(chat_id: int, from_message_id: int):
     file_name = f'{HISTORY_SAVE_DIRECTORY}/chat_history_{str(chat_id)}.json'
