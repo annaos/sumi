@@ -5,6 +5,9 @@ from src.config.common import HISTORY_MEMBERS_DIRECTORY
 from telegram import User
 
 
+DUPLICATE_ENTRY_SECONDS = 120
+
+
 def add_entry(chat_id, user: User, join: bool):
     data = {
         "id": user.id,
@@ -14,6 +17,8 @@ def add_entry(chat_id, user: User, join: bool):
         "timestamp": datetime.now().isoformat(),
     }
     history = _read_history_json(chat_id)
+    if _is_duplicate(history, data):
+        return
     if len(history) > 100:
         _archive_history_json(chat_id, history)
         history = []
@@ -23,6 +28,15 @@ def add_entry(chat_id, user: User, join: bool):
 
 def get_last_entries(chat_id, count: int):
     return _read_history_json(chat_id)[-count:]
+
+
+def _is_duplicate(history, data):
+    for entry in reversed(history):
+        if entry["id"] != data["id"] or entry["status"] != data["status"]:
+            continue
+        delta = datetime.fromisoformat(data["timestamp"]) - datetime.fromisoformat(entry["timestamp"])
+        return delta.total_seconds() < DUPLICATE_ENTRY_SECONDS
+    return False
 
 
 def _get_file_name(chat_id):

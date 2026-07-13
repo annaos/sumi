@@ -6,9 +6,10 @@ logging.basicConfig(format='\n%(asctime)s - %(name)s - %(levelname)s - %(message
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, PollHandler
+from telegram.ext import Application, ChatMemberHandler, CommandHandler, MessageHandler, filters, CallbackContext, PollHandler
 from telegram import Update
 from dotenv import load_dotenv
+from datetime import timedelta
 import os
 
 from src.handlers.poll_handlers import (
@@ -24,7 +25,9 @@ from src.handlers.interaction_handlers import remove_handler, joke_handler, say_
 from src.handlers.stats_handlers import stats_handler, wordle_handler, green_wordle_handler, color_wordle_handler
 from src.handlers.summarize_handlers import summarize_handler, prompt_handler
 from src.handlers.profile_handlers import profile_handler, profile_kai_handler
-from src.handlers.member_handlers import new_member, left_member, members_history_handler
+from src.handlers.member_handlers import new_member, left_member, members_history_handler, chat_member_update
+from src.core.reconcile_members import reconcile_members
+from src.config.common import MEMBERS_RECONCILE_HOURS
 from src.handlers.misc_handlers import help_handler, donate_handler, version_handler, list_handler, invite_handler
 
 load_dotenv()
@@ -71,16 +74,24 @@ def main():
     app.add_handler(CommandHandler("history", members_history_handler))
     app.add_handler(CommandHandler("profile", profile_handler))
     app.add_handler(CommandHandler("profile_kai", profile_kai_handler))
-    app.add_handler(CommandHandler("list", list_handler))
     app.add_handler(CommandHandler("cease", remove_handler))
     app.add_handler(CommandHandler("wordle", wordle_handler))
     app.add_handler(CommandHandler("wordleG", green_wordle_handler))
     app.add_handler(CommandHandler("wordleC", color_wordle_handler))
     app.add_handler(CommandHandler("invite", invite_handler))
+    app.add_handler(CommandHandler("list", list_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))
+
+    # work only if bot is an admin
+    app.add_handler(ChatMemberHandler(chat_member_update, ChatMemberHandler.CHAT_MEMBER))
+
     app.add_handler(PollHandler(poll_handler))
+
+    app.job_queue.run_repeating(reconcile_members,
+                                interval=timedelta(hours=MEMBERS_RECONCILE_HOURS),
+                                first=timedelta(minutes=5))
 
     app.add_error_handler(error_handler)
 

@@ -13,13 +13,17 @@ def get_all_members(chat_id):
 
 
 def add_member(chat_id, user: User):
+    members = _read_members_json(chat_id)
+    for existing in members:
+        if existing["id"] == user.id and "left_at" not in existing:
+            return
+
     member_data = {
         "id": user.id,
         "username": user.username,
         "fullname": user.full_name,
         "join_at": datetime.now().isoformat(),
     }
-    members = _read_members_json(chat_id)
     members.append(member_data)
     _write_members_json(chat_id, members)
 
@@ -63,13 +67,29 @@ def update_member(chat_id, user: User):
 
 
 def left_member(chat_id, user: User):
+    mark_member_left(chat_id, user.id)
+
+
+def mark_member_left(chat_id, user_id):
     members = _read_members_json(chat_id)
     for i in range(len(members)):
-        if members[i]["id"] == user.id and "left_at" not in members[i]:
+        if members[i]["id"] == user_id and "left_at" not in members[i]:
             members[i]["left_at"] = datetime.now().isoformat()
-            break
+            _write_members_json(chat_id, members)
+            return
 
-    _write_members_json(chat_id, members)
+
+def get_chat_ids():
+    if not os.path.isdir(HISTORY_MEMBERS_DIRECTORY):
+        return []
+    chat_ids = []
+    for entry in os.listdir(HISTORY_MEMBERS_DIRECTORY):
+        if entry.startswith("members_") and entry.endswith(".json"):
+            try:
+                chat_ids.append(int(entry[len("members_"):-len(".json")]))
+            except ValueError:
+                continue
+    return sorted(chat_ids)
 
 
 def _get_file_name(chat_id):
