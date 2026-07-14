@@ -1,17 +1,13 @@
 import logging
 import os
-import random
 
 from telegram import Update, Chat
-from telegram.constants import ReactionEmoji
-from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-from src.config import ALL_REACTION_FREQUENCY, ACTIVE_REACTION_FREQUENCY
 from src.jokes import answer_lucky
 from src.jokes import new_delay_message
-from src.history.save import save_message, save_private_sender, get_private_sender_id
-from src.reactions import is_target
+from src.history.save import save_message, save_private_sender, resolve_reply_target_id
+from src.reactions import maybe_react
 from src.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
@@ -28,25 +24,12 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
         save_private_sender(message.chat_id, message.from_user.full_name, message.from_user.username)
         await update.message.forward(root_chat_id)
     elif update.effective_chat.type == Chat.PRIVATE and message.chat_id == root_chat_id and reply_to_message is not None:
-        id = None
-        if "forward_sender_name" in reply_to_message.api_kwargs:
-            id = get_private_sender_id(reply_to_message.api_kwargs["forward_sender_name"])
-        elif "forward_from" in reply_to_message.api_kwargs:
-            id = reply_to_message.api_kwargs["forward_from"]["id"]
+        id = resolve_reply_target_id(reply_to_message)
         if id is not None:
             await context.bot.send_message(id, text=message.text)
 
     if is_active_chat(update.effective_message.chat_id) and not is_edited:
-        is_lucky_message = random.random() < ALL_REACTION_FREQUENCY
-        is_target_message = is_target(update.effective_message.chat_id, message.from_user.id) and message.message_id % ACTIVE_REACTION_FREQUENCY == 0
-        if is_lucky_message or is_target_message:
-            available = [e.value for e in ReactionEmoji]
-            emoji = random.choice(available)
-            try:
-              await message.set_reaction(reaction=emoji)
-            except BadRequest as e:
-                logger.error(repr(e) + ": Try to set invalid reaktion: " + emoji)
-                await message.set_reaction(reaction=ReactionEmoji.HEART_WITH_ARROW)
+        await react_lucky(message)
 
         answer = answer_lucky(message, is_edited)
         if answer:

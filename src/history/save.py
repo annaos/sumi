@@ -63,3 +63,11 @@ def get_private_sender_id(name):
         logger.error("An error occurred: %s", e)
     return None
 
+
+def resolve_reply_target_id(reply_to_message: Message):
+    if "forward_sender_name" in reply_to_message.api_kwargs:
+        return get_private_sender_id(reply_to_message.api_kwargs["forward_sender_name"])
+    if "forward_from" in reply_to_message.api_kwargs:
+        return reply_to_message.api_kwargs["forward_from"]["id"]
+    return None
+
