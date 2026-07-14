@@ -1,13 +1,15 @@
 import logging
 import random
 
-from telegram import Update
+from telegram import Update, User
 from telegram.constants import ReactionEmoji
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
 import src.history.read as gch
+from src.handlers.shared import get_admin_ids, get_user
 from src.jokes import generate_chain_joke_message
+from src.reactions import add_target, is_target, remove_target
 
 logger = logging.getLogger(__name__)
 
@@ -68,3 +70,22 @@ async def reaction_handler(update: Update, context: CallbackContext) -> None:
             except BadRequest as e:
                 logger.warning(repr(e) + ": Try to set invalid reaktion: " + emoji)
         await update.message.delete()
+
+
+async def add_react_target_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask add_react_target_handler with update %s", update)
+    chat_id = update.message.chat_id
+    if update.message.from_user.id not in await get_admin_ids(context.bot, chat_id):
+        return
+
+    user = get_user(update.message)
+    if not isinstance(user, User):
+        await update.message.reply_text("Не понял, кому теперь реагировать на все сообщения. Ответь на сообщение этого человека или упомяни его.")
+        return
+
+    if is_target(chat_id, user.id):
+        remove_target(chat_id, user.id)
+        await update.message.reply_text("Больше не буду реагировать на все сообщения %s." % user.full_name)
+    else:
+        add_target(chat_id, user)
+        await update.message.reply_text("Теперь буду реагировать на все сообщения %s." % user.full_name)

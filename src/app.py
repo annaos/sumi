@@ -21,7 +21,7 @@ from src.handlers.poll_handlers import (
     poll_handler,
 )
 from src.handlers.message_handlers import message_handler
-from src.handlers.interaction_handlers import remove_handler, joke_handler, say_handler, reaction_handler
+from src.handlers.interaction_handlers import remove_handler, joke_handler, say_handler, reaction_handler, add_react_target_handler
 from src.handlers.stats_handlers import stats_handler, wordle_handler, green_wordle_handler, color_wordle_handler
 from src.handlers.summarize_handlers import summarize_handler, prompt_handler
 from src.handlers.profile_handlers import profile_handler, profile_kai_handler
@@ -57,6 +57,7 @@ def main():
     app.add_handler(CommandHandler("sumisay", say_handler))
     app.add_handler(CommandHandler("say", say_handler))
     app.add_handler(CommandHandler("reaction", reaction_handler))
+    app.add_handler(CommandHandler("react_target", add_react_target_handler))
     app.add_handler(CommandHandler("version", version_handler))
     app.add_handler(CommandHandler("v", version_handler))
     app.add_handler(CommandHandler("start", help_handler))

@@ -10,6 +10,7 @@ from telegram.ext import CallbackContext
 from src.jokes import answer_felix
 from src.jokes import new_delay_message
 from src.history.save import save_message, save_private_sender, get_private_sender_id
+from src.reactions import is_target
 from src.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
             await context.bot.send_message(id, text=message.text)
 
     if is_active_chat(update.effective_message.chat_id) and not is_edited:
-        if random.random() < 0.05:
+        if random.random() < 0.05 or is_target(update.effective_message.chat_id, message.from_user.id):
             available = [e.value for e in ReactionEmoji]
             emoji = random.choice(available)
             try:

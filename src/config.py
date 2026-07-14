@@ -6,6 +6,7 @@ POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), ".
 HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "chats_history"))
 HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "members_history"))
 AI_USAGE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "ai_usage"))
+REACTION_TARGETS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "reaction_targets"))
 
 SUMMARY_HOURS_LIMIT = 5
 
