@@ -46,8 +46,6 @@ Once added to a group chat, Sumi listens to all text messages and stores them in
    ACTIVE_CHAT_IDS=-100123,-100456
    # Chats where the bot greets joining/leaving members
    ACTIVE_MEMBERSHIP_CHAT_IDS=-100123
-   # Users (full names or usernames) who receive jokes more often
-   ACTIVE_NAMES=Anna Os,sven
    # Your own chat ID — private messages to the bot are forwarded here
    MY_CHAT_ID=12345
    ```

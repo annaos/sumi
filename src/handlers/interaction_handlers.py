@@ -8,6 +8,7 @@ from telegram.ext import CallbackContext
 
 import src.history.read as gch
 from src.handlers.shared import get_admin_ids, get_user
+from src.joke_targets import add_target as add_joke_target, is_target as is_joke_target, remove_target as remove_joke_target
 from src.jokes import generate_chain_joke_message
 from src.reactions import add_target, is_target, remove_target
 
@@ -89,3 +90,22 @@ async def add_react_target_handler(update: Update, context: CallbackContext) -> 
     else:
         add_target(chat_id, user)
         await update.message.reply_text("Теперь буду реагировать на все сообщения %s." % user.full_name)
+
+
+async def add_joke_target_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask add_joke_target_handler with update %s", update)
+    chat_id = update.message.chat_id
+    if update.message.from_user.id not in await get_admin_ids(context.bot, chat_id):
+        return
+
+    user = get_user(update.message)
+    if not isinstance(user, User):
+        await update.message.reply_text("Не понял, над кем теперь шутить в каждом сообщении. Ответь на сообщение этого человека или упомяни его.")
+        return
+
+    if is_joke_target(chat_id, user.id):
+        remove_joke_target(chat_id, user.id)
+        await update.message.reply_text("Больше не буду шутить над каждым сообщением %s." % user.full_name)
+    else:
+        add_joke_target(chat_id, user)
+        await update.message.reply_text("Теперь буду шутить над каждым сообщением %s." % user.full_name)

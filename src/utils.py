@@ -44,12 +44,6 @@ def is_active_chat(chat_id: int) -> bool:
     return str(chat_id) in os.getenv('ACTIVE_CHAT_IDS').split(",")
 
 
-def is_active_participant(user: User) -> bool:
-    name = user.full_name
-    username = user.username
-    return name in os.getenv('ACTIVE_NAMES').split(",") or username in os.getenv('ACTIVE_NAMES').split(",")
-
-
 def get_point(args):
     (_, point) = _divide_args(args)
     return point

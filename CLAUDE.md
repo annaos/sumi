@@ -35,7 +35,7 @@ Organized by feature, wired in `src/app.py` (handler registration + job_queue jo
 - `src/ai.py` — the single OpenAI gateway (`ask_ai()`); models configured in `src/config.py`.
 - `src/utils.py` — command-argument parsing and env-based chat checks only; no domain logic.
 
-Constants and directory paths: `src/config.py`. Secrets and chat allowlists come from `.env` (see README). Note: `is_active_chat()`/`is_active_participant()` crash if `ACTIVE_CHAT_IDS`/`ACTIVE_NAMES` env vars are unset — tests always set them via `patch.dict(os.environ, ...)`.
+Constants and directory paths: `src/config.py`. Secrets and chat allowlists come from `.env` (see README). Note: `is_active_chat()` crash if `ACTIVE_CHAT_IDS` env vars are unset — tests always set them via `patch.dict(os.environ, ...)`.
 
 ### Chat history storage (the part that spans multiple files)
 

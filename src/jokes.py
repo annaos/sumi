@@ -1,4 +1,5 @@
 import logging
+import random
 from datetime import datetime, timedelta, time
 
 from telegram import Message
@@ -6,8 +7,8 @@ from telegram.ext import CallbackContext, ContextTypes
 
 from src.ai import ask_ai
 from src.config import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY, AI_MODEL_PRO, NEW_MESSAGE_MINUTES
+from src.joke_targets import is_target
 from src.members.registry import get_sender
-from src.utils import is_active_participant
 import src.history.read as gch
 
 logger = logging.getLogger(__name__)
@@ -51,12 +52,12 @@ def generate_chain_joke_message(messages_history):
     return completion.choices[0].message.content
 
 
-def answer_felix(message: Message, is_edited: bool):
+def answer_lucky(message: Message, is_edited: bool):
     if is_edited == True:
         return None
-    is_active_message = is_active_participant(message.from_user) and message.message_id % ACTIVE_ANSWER_FREQUENCY == 0
-    is_lucky_message = message.message_id % ALL_ANSWER_FREQUENCY == 0
-    if is_active_message or is_lucky_message:
+    is_lucky_message = random.random() < ALL_ANSWER_FREQUENCY
+    is_target_message = is_target(message.chat_id, message.from_user.id) and random.random() < ACTIVE_ANSWER_FREQUENCY
+    if is_lucky_message or is_target_message:
         return generate_joke_message(message.from_user, message.text if message.text else message.caption)
     return None
 

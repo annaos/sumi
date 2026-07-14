@@ -7,7 +7,8 @@ from telegram.constants import ReactionEmoji
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-from src.jokes import answer_felix
+from config import ALL_REACTION_FREQUENCY, ACTIVE_REACTION_FREQUENCY
+from src.jokes import answer_lucky
 from src.jokes import new_delay_message
 from src.history.save import save_message, save_private_sender, get_private_sender_id
 from src.reactions import is_target
@@ -36,7 +37,9 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
             await context.bot.send_message(id, text=message.text)
 
     if is_active_chat(update.effective_message.chat_id) and not is_edited:
-        if random.random() < 0.05 or is_target(update.effective_message.chat_id, message.from_user.id):
+        is_lucky_message = random.random() < ALL_REACTION_FREQUENCY
+        is_target_message = is_target(update.effective_message.chat_id, message.from_user.id) and message.message_id % ACTIVE_REACTION_FREQUENCY == 0
+        if is_lucky_message or is_target_message:
             available = [e.value for e in ReactionEmoji]
             emoji = random.choice(available)
             try:
@@ -45,7 +48,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
                 logger.error(repr(e) + ": Try to set invalid reaktion: " + emoji)
                 await message.set_reaction(reaction=ReactionEmoji.HEART_WITH_ARROW)
 
-        answer = answer_felix(message, is_edited)
+        answer = answer_lucky(message, is_edited)
         if answer:
             await update.message.reply_text(answer)
         else:
