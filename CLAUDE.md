@@ -22,7 +22,7 @@ python3 -m unittest tests.test_utils.GetBoundaryTestCase.test_hours
 
 Everything must run from the repo root — imports are absolute (`src.*`).
 
-There is no linter or build step. `VERSION` in `src/config.py` is bumped manually by the maintainer — leave it alone.
+There is no linter or build step. `VERSION` in `src/config.py` is derived automatically (from `git log -1`, else `"dev"`) — never hardcode it.
 
 ## Architecture
 
