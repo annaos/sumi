@@ -7,7 +7,7 @@ from telegram.constants import ReactionEmoji
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-from config import ALL_REACTION_FREQUENCY, ACTIVE_REACTION_FREQUENCY
+from src.config import ALL_REACTION_FREQUENCY, ACTIVE_REACTION_FREQUENCY
 from src.jokes import answer_lucky
 from src.jokes import new_delay_message
 from src.history.save import save_message, save_private_sender, get_private_sender_id
