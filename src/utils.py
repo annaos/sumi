@@ -37,11 +37,11 @@ def get_time_delta(chat_history):
 
 
 def is_active_membership_chat(chat_id: int) -> bool:
-    return str(chat_id) in os.getenv('ACTIVE_MEMBERSHIP_CHAT_IDS').split(",")
+    return str(chat_id) in os.getenv('ACTIVE_MEMBERSHIP_CHAT_IDS', '').split(",")
 
 
 def is_active_chat(chat_id: int) -> bool:
-    return str(chat_id) in os.getenv('ACTIVE_CHAT_IDS').split(",")
+    return str(chat_id) in os.getenv('ACTIVE_CHAT_IDS', '').split(",")
 
 
 def get_point(args):
