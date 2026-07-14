@@ -1,11 +1,14 @@
 import logging
 import os
+from datetime import timedelta
 
 from telegram import Update, Chat
 from telegram.ext import CallbackContext
 
 import src.history.read as gch
+from src.ai_usage import get_usage_report
 from src.config import VERSION
+from src.utils import get_boundary
 
 logger = logging.getLogger(__name__)
 
@@ -72,3 +75,20 @@ async def invite_handler(update: Update, context: CallbackContext) -> None:
         chat = os.getenv("ACTIVE_CHAT_IDS").partition(",")[0]
         link = await context.bot.create_chat_invite_link(chat)
         await update.message.reply_text(link.invite_link)
+
+
+async def ai_usage_handler(update: Update, context: CallbackContext) -> None:
+    logger.info("Ask ai_usage_handler with update %s", update)
+    if not (update.effective_chat.type == Chat.PRIVATE and update.effective_message.chat_id == int(os.getenv("MY_CHAT_ID"))):
+        return
+
+    delta = get_boundary(context.args, timedelta(days=1))
+    usage = get_usage_report(delta)
+    if not usage:
+        await update.message.reply_text("No AI usage recorded for this period.")
+        return
+
+    lines = ["AI usage over the last %s:" % str(delta)]
+    for handler, entry in sorted(usage.items()):
+        lines.append("%s: in=%d out=%d calls=%d" % (handler, entry["in_tokens"], entry["out_tokens"], entry["calls"]))
+    await update.message.reply_text("\n".join(lines))

@@ -29,7 +29,7 @@ def generate_joke_message(user, message: str):
 - Шути по сути сообщения, а не общими фразами. Можно по-злому подколоть {sender}.
 {JOKE_RULES}"""
 
-    completion = ask_ai(system, message, AI_MODEL_PRO)
+    completion = ask_ai(system, message, "joke", AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 
@@ -46,7 +46,7 @@ def generate_chain_joke_message(messages_history):
         if message != None:
             messages += "%s: %s \n" % (message["sender"], message["message"])
 
-    completion = ask_ai(system, messages, AI_MODEL_PRO)
+    completion = ask_ai(system, messages, "joke_chain", AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 

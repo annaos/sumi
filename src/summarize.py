@@ -60,27 +60,20 @@ def summarize(chat_history, delta, user, point: str = "", prompt: str = ""):
     messages_prompt = _generate_promt(chat_history)
     if point == "" and prompt == "":
         system_promt = SUMMARY_SYSTEM_PROMPT
+        handler = "summarize"
     elif prompt != "":
         system_promt = SHORT_SYSTEM_PROMPT % (prompt)
+        handler = "prompt"
     else:
         system_promt = POINT_SUMMARY_SYSTEM_PROMPT % (point)
+        handler = "summarize"
     logger.info('prompt: %s', system_promt)
-    # f = open("demofile2.txt", "a")
-    # f.write(messages_prompt)
-    # f.close()
-    # return ''
 
-    completion = ask_ai(system_promt, messages_prompt)
+    completion = ask_ai(system_promt, messages_prompt, handler)
 
     response_content = completion.choices[0].message.content
     metadata = "\n\n---\n\n"
-
     metadata += f"Model: {completion.model}\n"
-    in_tokens = completion.usage.prompt_tokens
-    out_tokens = completion.usage.completion_tokens
-    tokens = completion.usage.total_tokens
-    price = in_tokens / 1000000 * 15 + out_tokens / 1000000 * 60
-    metadata += f"Total price: {price:.2f} cents ({tokens} tokens)\n"
     metadata += f"Version: {VERSION}\n"
 
     return response_content + metadata
@@ -89,18 +82,13 @@ def summarize(chat_history, delta, user, point: str = "", prompt: str = ""):
 def profile(chat_history, user, delta, kai: bool):
     messages_prompt = _generate_promt(chat_history)
     system_promt = PROFILE_KAI_SYSTEM_PROMPT % user.full_name if kai else PROFILE_SYSTEM_PROMPT % user.full_name
+    handler = "profile_kai" if kai else "profile"
 
-    completion = ask_ai(system_promt, messages_prompt)
+    completion = ask_ai(system_promt, messages_prompt, handler)
 
     response_content = completion.choices[0].message.content
     metadata = "\n\n---\n\n"
-
     metadata += f"Model: {completion.model}\n"
-    in_tokens = completion.usage.prompt_tokens
-    out_tokens = completion.usage.completion_tokens
-    tokens = completion.usage.total_tokens
-    price = in_tokens / 1000000 * 5 + out_tokens / 1000000 * 30
-    metadata += f"Total price: {price:.2f} cents ({tokens} tokens)\n"
     metadata += f"Version: {VERSION}\n"
 
     return _create_profile_header(user, delta) + response_content + metadata

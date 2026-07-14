@@ -28,7 +28,7 @@ from src.handlers.profile_handlers import profile_handler, profile_kai_handler
 from src.handlers.member_handlers import new_member, left_member, members_history_handler, chat_member_update
 from src.members.reconcile import reconcile_members
 from src.config import MEMBERS_RECONCILE_HOURS
-from src.handlers.misc_handlers import help_handler, donate_handler, version_handler, list_handler, invite_handler
+from src.handlers.misc_handlers import help_handler, donate_handler, version_handler, list_handler, invite_handler, ai_usage_handler
 
 load_dotenv()
 
@@ -80,6 +80,7 @@ def main():
     app.add_handler(CommandHandler("wordleC", color_wordle_handler))
     app.add_handler(CommandHandler("invite", invite_handler))
     app.add_handler(CommandHandler("list", list_handler))
+    app.add_handler(CommandHandler("ai_usage", ai_usage_handler))
 
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member))
     app.add_handler(MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, left_member))

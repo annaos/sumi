@@ -5,6 +5,7 @@ import subprocess
 POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "polls"))
 HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "chats_history"))
 HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "members_history"))
+AI_USAGE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "ai_usage"))
 
 SUMMARY_HOURS_LIMIT = 5
 
@@ -34,6 +35,6 @@ VERSION = _read_version()
 ACTIVE_ANSWER_FREQUENCY = 5
 ALL_ANSWER_FREQUENCY = 100
 
-AI_MODEL = "gpt-5.5"
-AI_MODEL_PRO = "gpt-4o"
+AI_MODEL = "gpt-5.6-terra"
+AI_MODEL_PRO = "gpt-5.6-sol"
 
