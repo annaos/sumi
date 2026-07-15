@@ -6,14 +6,14 @@ from telegram.ext import ContextTypes
 
 import sumi.members.registry as member
 from sumi.members.events import add_entry
-from sumi.utils import is_active_chat
+from sumi.utils import is_active_chat, is_active_membership_chat
 
 logger = logging.getLogger(__name__)
 
 
 async def reconcile_members(context: ContextTypes.DEFAULT_TYPE) -> None:
     for chat_id in member.get_chat_ids():
-        if not is_active_chat(chat_id):
+        if not is_active_chat(chat_id) and not is_active_membership_chat(chat_id):
             continue
         await _reconcile_chat(context, chat_id)
 

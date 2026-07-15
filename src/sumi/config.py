@@ -40,5 +40,5 @@ ALL_ANSWER_FREQUENCY = 0.01
 ALL_REACTION_FREQUENCY = 0.01
 
 AI_MODEL = "gpt-5.6-terra"
-AI_MODEL_PRO = "gpt-5.6-sol"
+AI_MODEL_PRO = "gpt-5.6-luna"
 

@@ -6,7 +6,7 @@ from telegram.ext import CallbackContext
 
 import sumi.members.registry as member
 from sumi.members.events import add_entry, get_last_entries
-from sumi.utils import is_active_membership_chat
+from sumi.utils import is_active_membership_chat, is_active_chat
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +34,16 @@ def _extract_status_change(chat_member_update: ChatMemberUpdated):
 
 
 async def chat_member_update(update: Update, context: CallbackContext) -> None:
+    chat_id = update.chat_member.chat.id
+    if not is_active_chat(chat_id) and not is_active_membership_chat(chat_id):
+        return
+
     logger.info("Ask chat_member_update with update %s", update)
     change = _extract_status_change(update.chat_member)
     if change is None:
         return
 
     was_member, is_member = change
-    chat_id = update.chat_member.chat.id
     user = update.chat_member.new_chat_member.user
 
     if not was_member and is_member:
@@ -52,8 +55,11 @@ async def chat_member_update(update: Update, context: CallbackContext) -> None:
 
 
 async def new_member(update: Update, context: CallbackContext) -> None:
-    logger.info("Ask new_member with update %s", update)
     chat_id = update.effective_message.chat_id
+    if not is_active_chat(chat_id) and not is_active_membership_chat(chat_id):
+        return
+
+    logger.info("Ask new_member with update %s", update)
     new_members = update.effective_message.new_chat_members
     for new_mem in new_members:
         add_entry(chat_id, new_mem, True)
@@ -63,8 +69,11 @@ async def new_member(update: Update, context: CallbackContext) -> None:
 
 
 async def left_member(update: Update, context: CallbackContext) -> None:
-    logger.info("Ask left_member with update %s", update)
     chat_id = update.effective_message.chat_id
+    if not is_active_chat(chat_id) and not is_active_membership_chat(chat_id):
+        return
+
+    logger.info("Ask left_member with update %s", update)
     left_chat_member = update.effective_message.left_chat_member
     add_entry(chat_id, left_chat_member, False)
     member.left_member(chat_id, left_chat_member)
@@ -73,8 +82,11 @@ async def left_member(update: Update, context: CallbackContext) -> None:
 
 
 async def members_history_handler(update: Update, context: CallbackContext) -> None:
-    logger.info("Ask members_history_handler with update %s", update)
     chat_id = update.effective_message.chat_id
+    if not is_active_chat(chat_id) and not is_active_membership_chat(chat_id):
+        return
+
+    logger.info("Ask members_history_handler with update %s", update)
     count = int(" ".join(context.args)) if " ".join(context.args).isnumeric() and int(" ".join(context.args)) > 0 else 10
     history = get_last_entries(chat_id, count)
     msg = ""
