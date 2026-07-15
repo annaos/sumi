@@ -45,9 +45,6 @@ class HistoryDirectoryTestCase(unittest.TestCase):
             patcher = patch(target, self.history_dir)
             patcher.start()
             self.addCleanup(patcher.stop)
-        env = patch.dict(os.environ, {"ACTIVE_CHAT_IDS": "-999", "ACTIVE_MEMBERSHIP_CHAT_IDS": "-999"})
-        env.start()
-        self.addCleanup(env.stop)
 
 
 class SaveAndReadRoundTripTestCase(HistoryDirectoryTestCase):

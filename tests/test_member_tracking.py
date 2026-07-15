@@ -107,6 +107,12 @@ def _admin(user):
 
 class ChatMemberUpdateHandlerTestCase(MembersDirectoryTestCase):
 
+    def setUp(self):
+        super().setUp()
+        env = patch.dict(os.environ, {"ACTIVE_MEMBERSHIP_CHAT_IDS": str(CHAT_ID)})
+        env.start()
+        self.addCleanup(env.stop)
+
     async def test_leave_without_service_message_marks_member_as_left(self):
         member.add_member(CHAT_ID, _user())
 

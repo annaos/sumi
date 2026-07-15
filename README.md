@@ -42,10 +42,14 @@ Once added to a group chat, Sumi listens to all text messages and stores them in
    OPENAI_TOKEN=<your OpenAI API key>
 
    PROD=True
-   # Chats where the bot jokes spontaneously and tracks members (comma-separated chat IDs)
+   # Chats where the bot's core commands are open to non-admins (comma-separated chat IDs)
    ACTIVE_CHAT_IDS=-100123,-100456
-   # Chats where the bot greets joining/leaving members
+   # Chats where the bot jokes and reacts spontaneously (comma-separated chat IDs)
+   ACTIVE_JOKE_CHAT_IDS=-100123,-100456
+   # Chats where the bot tracks members joining/leaving (comma-separated chat IDs)
    ACTIVE_MEMBERSHIP_CHAT_IDS=-100123
+   # The one chat where the bot additionally greets joining/leaving members (comma-separated chat IDs)
+   ACTIVE_GREETING_CHAT_IDS=-100124
    # Your own chat ID — private messages to the bot are forwarded here
    MY_CHAT_ID=12345
    ```

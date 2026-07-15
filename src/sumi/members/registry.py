@@ -51,28 +51,6 @@ def get_sender(user) -> str:
     return user.full_name
 
 
-def update_member(chat_id, user: User):
-    member_data = {
-        "id": user.id,
-        "username": user.username,
-        "fullname": user.full_name,
-        "join_at": None,
-    }
-
-    members = _read_members_json(chat_id)
-    for i, member in enumerate(members):
-        if member["fullname"] == user.full_name and member["id"] != None:
-            return
-
-        if member["fullname"] == user.full_name and member["id"] == None:
-            members[i] = member_data
-            _write_members_json(chat_id, members)
-            return
-
-    members.append(member_data)
-    _write_members_json(chat_id, members)
-
-
 def left_member(chat_id, user: User):
     mark_member_left(chat_id, user.id)
 

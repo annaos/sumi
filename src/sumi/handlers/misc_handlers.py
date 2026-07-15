@@ -74,7 +74,7 @@ async def list_handler(update: Update, context: CallbackContext) -> None:
 async def invite_handler(update: Update, context: CallbackContext) -> None:
     logger.info("Ask invite_handler with update %s", update)
     if update.effective_chat.type == Chat.PRIVATE and update.effective_message.chat_id == int(os.getenv("MY_CHAT_ID")):
-        chat = os.getenv("ACTIVE_CHAT_IDS").partition(",")[0]
+        chat = os.getenv("INVITE_CHAT_ID")
         link = await context.bot.create_chat_invite_link(chat)
         await update.message.reply_text(link.invite_link)
 

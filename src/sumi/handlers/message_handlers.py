@@ -8,7 +8,7 @@ from sumi.jokes import answer_lucky
 from sumi.jokes import new_delay_message
 from sumi.history.save import save_message, save_private_sender, resolve_reply_target_id
 from sumi.reactions import react_lucky
-from sumi.utils import is_active_chat
+from sumi.utils import is_active_joke_chat
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
         if id is not None:
             await context.bot.send_message(id, text=message.text)
 
-    if is_active_chat(update.effective_message.chat_id) and not is_edited:
+    if is_active_joke_chat(update.effective_message.chat_id) and not is_edited:
         await react_lucky(message)
 
         answer = answer_lucky(message, is_edited)

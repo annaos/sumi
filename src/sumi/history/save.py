@@ -3,8 +3,7 @@ import os
 from telegram import Message
 from datetime import datetime
 from sumi.config import HISTORY_SAVE_DIRECTORY
-from sumi.utils import is_active_chat, get_logger
-import sumi.members.registry as member
+from sumi.utils import get_logger
 import sumi.history.storage as storage
 
 def save_message(message: Message, is_edited: bool):
@@ -24,9 +23,6 @@ def save_message(message: Message, is_edited: bool):
         storage.update_message(chat_id, message_data)
     else:
         storage.append_message(chat_id, message.chat.title, message_data)
-
-    if is_active_chat(chat_id):
-        member.update_member(chat_id, message.from_user)
 
 
 def save_private_sender(chat_id, full_name, username):
