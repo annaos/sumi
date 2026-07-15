@@ -39,7 +39,7 @@ async def joke_handler(update: Update, context: CallbackContext) -> None:
             await update.message.delete()
 
     if mes is None:
-        await update.message.reply_text("О чём шутить?")
+        await update.message.reply_text("Не понял, о чём шутить. Ответь на сообщение, на которое надо остроумно ответить.")
 
 
 async def say_handler(update: Update, context: CallbackContext) -> None:
