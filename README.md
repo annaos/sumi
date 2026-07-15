@@ -32,9 +32,9 @@ Once added to a group chat, Sumi listens to all text messages and stores them in
    ```sh
    git clone git@gitlab.ichbins.net:anna/sumi.git
    ```
-2. Install the required packages
+2. Install the package (editable install, so code changes take effect immediately)
    ```sh
-   pip install -r requirements.txt
+   pip install -e .
    ```
 3. Create a `.env` file in the root directory:
    ```env
@@ -51,7 +51,7 @@ Once added to a group chat, Sumi listens to all text messages and stores them in
    ```
 4. Run the bot (from the repository root)
    ```sh
-   python -m src.app
+   python -m sumi.app
    ```
 5. Add the bot to a group chat, send some messages and try `/sum`.
 
@@ -76,7 +76,7 @@ python3 -m unittest tests.test_util
 python3 -m unittest tests.test_util.GetBoundaryTestCase.test_hours
 ```
 
-The code under `src/` is organized by feature: `handlers/` (all Telegram commands), `history/` (message storage), `members/` (member tracking), plus one module per feature (`summarize.py`, `statistic.py`, `jokes.py`, `polls.py`) on top of shared `ai.py`, `utils.py`, and `config.py`. See `CLAUDE.md` for architecture details and conventions.
+The code lives in `src/sumi/`, organized by feature: `handlers/` (all Telegram commands), `history/` (message storage), `members/` (member tracking), plus one module per feature (`summarize.py`, `statistic.py`, `jokes.py`, `polls.py`) on top of shared `ai.py`, `utils.py`, and `config.py`. See `CLAUDE.md` for architecture details and conventions.
 
 ## License
 

@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from datetime import timedelta
 import os
 
-from src.handlers.poll_handlers import (
+from sumi.handlers.poll_handlers import (
     create_anonym_single_poll_handler,
     create_anonym_multi_poll_handler,
     create_single_poll_handler,
@@ -20,15 +20,15 @@ from src.handlers.poll_handlers import (
     close_poll_handler,
     poll_handler,
 )
-from src.handlers.message_handlers import message_handler
-from src.handlers.interaction_handlers import remove_handler, joke_handler, say_handler, reaction_handler, add_react_target_handler, add_joke_target_handler
-from src.handlers.stats_handlers import stats_handler, wordle_handler, green_wordle_handler, color_wordle_handler
-from src.handlers.summarize_handlers import summarize_handler, prompt_handler
-from src.handlers.profile_handlers import profile_handler, profile_kai_handler
-from src.handlers.member_handlers import new_member, left_member, members_history_handler, chat_member_update
-from src.members.reconcile import reconcile_members
-from src.config import MEMBERS_RECONCILE_HOURS
-from src.handlers.misc_handlers import help_handler, donate_handler, version_handler, list_handler, invite_handler, ai_usage_handler
+from sumi.handlers.message_handlers import message_handler
+from sumi.handlers.interaction_handlers import remove_handler, joke_handler, say_handler, reaction_handler, add_react_target_handler, add_joke_target_handler
+from sumi.handlers.stats_handlers import stats_handler, wordle_handler, green_wordle_handler, color_wordle_handler
+from sumi.handlers.summarize_handlers import summarize_handler, prompt_handler
+from sumi.handlers.profile_handlers import profile_handler, profile_kai_handler
+from sumi.handlers.member_handlers import new_member, left_member, members_history_handler, chat_member_update
+from sumi.members.reconcile import reconcile_members
+from sumi.config import MEMBERS_RECONCILE_HOURS
+from sumi.handlers.misc_handlers import help_handler, donate_handler, version_handler, list_handler, invite_handler, ai_usage_handler
 
 load_dotenv()
 

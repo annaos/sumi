@@ -4,11 +4,11 @@ import os
 from telegram import Update, Chat
 from telegram.ext import CallbackContext
 
-from src.jokes import answer_lucky
-from src.jokes import new_delay_message
-from src.history.save import save_message, save_private_sender, resolve_reply_target_id
-from src.reactions import react_lucky
-from src.utils import is_active_chat
+from sumi.jokes import answer_lucky
+from sumi.jokes import new_delay_message
+from sumi.history.save import save_message, save_private_sender, resolve_reply_target_id
+from sumi.reactions import react_lucky
+from sumi.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
 

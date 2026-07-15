@@ -2,8 +2,8 @@ import os
 import json
 from telegram import Poll, Message
 from datetime import datetime
-from src.config import POLL_SAVE_DIRECTORY
-from src.utils import get_logger
+from sumi.config import POLL_SAVE_DIRECTORY
+from sumi.utils import get_logger
 
 MAX_ANSWERS_IN_FILE = 1000
 

@@ -4,7 +4,7 @@ import os
 import logging
 
 from telegram import Message, User
-from src.config import STATISTIC_HOURS
+from sumi.config import STATISTIC_HOURS
 
 
 def get_statistic_boundary(reply_to_message: Message, args):

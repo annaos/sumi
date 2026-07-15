@@ -6,12 +6,12 @@ from telegram.constants import ReactionEmoji
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
-import src.history.read as gch
-from src.handlers.shared import get_admin_ids, get_user
-from src.joke_targets import add_target as add_joke_target, is_target as is_joke_target, remove_target as remove_joke_target
-from src.jokes import generate_chain_joke_message
-from src.reactions import add_target, is_target, remove_target
-from src.utils import is_active_chat
+import sumi.history.read as gch
+from sumi.handlers.shared import get_admin_ids, get_user
+from sumi.joke_targets import add_target as add_joke_target, is_target as is_joke_target, remove_target as remove_joke_target
+from sumi.jokes import generate_chain_joke_message
+from sumi.reactions import add_target, is_target, remove_target
+from sumi.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
 

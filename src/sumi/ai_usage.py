@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 
-from src.config import AI_USAGE_DIRECTORY
+from sumi.config import AI_USAGE_DIRECTORY
 
 logger = logging.getLogger(__name__)
 

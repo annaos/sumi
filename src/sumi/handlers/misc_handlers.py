@@ -5,10 +5,10 @@ from datetime import timedelta
 from telegram import Update, Chat
 from telegram.ext import CallbackContext
 
-import src.history.read as gch
-from src.ai_usage import get_usage_report
-from src.config import VERSION
-from src.utils import get_boundary
+import sumi.history.read as gch
+from sumi.ai_usage import get_usage_report
+from sumi.config import VERSION
+from sumi.utils import get_boundary
 
 logger = logging.getLogger(__name__)
 

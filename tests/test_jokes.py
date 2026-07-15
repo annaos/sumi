@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 
-from src.jokes import _is_time_at_night, _get_due_till_morning
+from sumi.jokes import _is_time_at_night, _get_due_till_morning
 
 
 class IsTimeAtNightTestCase(unittest.TestCase):

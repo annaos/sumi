@@ -4,9 +4,9 @@ from telegram import ChatMember, User
 from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
-import src.members.registry as member
-from src.members.events import add_entry
-from src.utils import is_active_chat
+import sumi.members.registry as member
+from sumi.members.events import add_entry
+from sumi.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
 

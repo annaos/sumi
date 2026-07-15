@@ -4,9 +4,9 @@ from datetime import datetime
 from telegram import Bot, Message, MessageEntity, Update, User
 from telegram.ext import CallbackContext
 
-import src.history.read as gch
-from src.members.registry import get_member_by_name
-from src.utils import get_statistic_boundary, get_time_delta
+import sumi.history.read as gch
+from sumi.members.registry import get_member_by_name
+from sumi.utils import get_statistic_boundary, get_time_delta
 
 logger = logging.getLogger(__name__)
 

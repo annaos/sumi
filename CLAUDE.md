@@ -9,8 +9,11 @@ Sumi — a Russian-speaking Telegram group-chat bot (python-telegram-bot v21, as
 ## Commands
 
 ```sh
+# One-time: editable-install the package (src-layout, so `sumi` is only importable this way)
+pip install -e .
+
 # Run the bot (from repo root; requires .env, see README)
-python -m src.app
+python -m sumi.app
 
 # Run all tests (stdlib unittest — no pytest, no venv, system Python 3.10)
 python3 -m unittest discover -s tests
@@ -20,28 +23,28 @@ python3 -m unittest tests.test_utils
 python3 -m unittest tests.test_utils.GetBoundaryTestCase.test_hours
 ```
 
-Everything must run from the repo root — imports are absolute (`src.*`).
+Everything must run from the repo root — imports are absolute (`sumi.*`). The package lives at `src/sumi/` (src-layout, see `pyproject.toml`); `tests/` is a sibling, not part of the `sumi` package.
 
-There is no linter or build step. `VERSION` in `src/config.py` is derived automatically (from `git log -1`, else `"dev"`) — never hardcode it.
+There is no linter or build step. `VERSION` in `src/sumi/config.py` is derived automatically (from `git log -1`, else `"dev"`) — never hardcode it.
 
 ## Architecture
 
-Organized by feature, wired in `src/app.py` (handler registration + job_queue jobs). Import direction: `handlers/` → feature modules → `ai.py`/`utils.py`/`config.py`; nothing below `handlers/` touches `Update` objects.
+Organized by feature, wired in `src/sumi/app.py` (handler registration + job_queue jobs). Import direction: `handlers/` → feature modules → `ai.py`/`utils.py`/`config.py`; nothing below `handlers/` touches `Update` objects.
 
-- `src/handlers/` — all Telegram entry points. `shared.py` has `fetch_chat_history()` (resolves the "reply vs. time argument" convention used by most commands) and `get_user()` (mention/reply → User).
-- `src/history/` — message persistence: `storage.py` (on-disk format), `save.py` (write path), `read.py` (read path).
-- `src/members/` — member tracking: `registry.py` (current members per chat), `events.py` (join/leave log), `reconcile.py` (daily job). The registry/events split matters: state vs. event log.
-- `src/summarize.py`, `src/statistic.py`, `src/jokes.py`, `src/polls.py` — one file per feature (prompts live with their feature).
-- `src/ai.py` — the single OpenAI gateway (`ask_ai()`); models configured in `src/config.py`.
-- `src/utils.py` — command-argument parsing and env-based chat checks only; no domain logic.
+- `src/sumi/handlers/` — all Telegram entry points. `shared.py` has `fetch_chat_history()` (resolves the "reply vs. time argument" convention used by most commands) and `get_user()` (mention/reply → User).
+- `src/sumi/history/` — message persistence: `storage.py` (on-disk format), `save.py` (write path), `read.py` (read path).
+- `src/sumi/members/` — member tracking: `registry.py` (current members per chat), `events.py` (join/leave log), `reconcile.py` (daily job). The registry/events split matters: state vs. event log.
+- `src/sumi/summarize.py`, `src/sumi/statistic.py`, `src/sumi/jokes.py`, `src/sumi/polls.py` — one file per feature (prompts live with their feature).
+- `src/sumi/ai.py` — the single OpenAI gateway (`ask_ai()`); models configured in `src/sumi/config.py`.
+- `src/sumi/utils.py` — command-argument parsing and env-based chat checks only; no domain logic.
 
-Constants and directory paths: `src/config.py`. Secrets and chat allowlists come from `.env` (see README). `is_active_chat()` returns `False` (rather than crashing) when `ACTIVE_CHAT_IDS` is unset; tests still set it via `patch.dict(os.environ, ...)` for clarity.
+Constants and directory paths: `src/sumi/config.py`. Secrets and chat allowlists come from `.env` (see README). `is_active_chat()` returns `False` (rather than crashing) when `ACTIVE_CHAT_IDS` is unset; tests still set it via `patch.dict(os.environ, ...)` for clarity.
 
 ### Chat history storage (the part that spans multiple files)
 
 All persistence is JSON files under `saved_data/` (gitignored). Chat history is **sharded**: each chat is a directory `chats_history/chat_<id>/` holding `meta.json` (chat_id, title, summary_created_at) plus one `messages_YYYY-MM.json` per month.
 
-`src/history/storage.py` is the **only** module allowed to touch these files. It provides atomic writes (tmp + `os.replace`), quarantines unparseable files as `*.broken` instead of failing, and transparently migrates the legacy single-file format `chat_history_<id>.json` (renamed to `*.migrated`) on first access. Old messages are never deleted — retention/cleaning was removed deliberately.
+`src/sumi/history/storage.py` is the **only** module allowed to touch these files. It provides atomic writes (tmp + `os.replace`), quarantines unparseable files as `*.broken` instead of failing, and transparently migrates the legacy single-file format `chat_history_<id>.json` (renamed to `*.migrated`) on first access. Old messages are never deleted — retention/cleaning was removed deliberately.
 
 Write path: `history/save.py` (called for every text message). Read path: `history/read.py`, whose functions return the assembled dict `{chat_id, title, ..., messages: [...]}` — everything above (handlers, `statistic.py`, `summarize.py`) only ever sees that dict shape.
 
@@ -50,7 +53,7 @@ Write path: `history/save.py` (called for every text message). Read path: `histo
 Leaves/joins are recorded in `saved_data/members_history/members_<id>.json` via:
 1. Service-message handlers (`new_member`/`left_member`) — also send the greeting replies; work without admin rights but Telegram omits these messages in groups >50 members.
 2. `ChatMemberHandler` (`chat_member_update`) — reliable, but only fires where the bot is a group **admin**.
-3. Daily reconcile job (`src/members/reconcile.py`) — polls `get_chat_member` for chats in `ACTIVE_CHAT_IDS` and marks silent leavers.
+3. Daily reconcile job (`src/sumi/members/reconcile.py`) — polls `get_chat_member` for chats in `ACTIVE_CHAT_IDS` and marks silent leavers.
 
 Because paths 1+2 can both fire for one event, dedup guards exist in `registry.add_member`, `registry.mark_member_left`, and `events.add_entry` (120 s window) — keep them intact when touching this area.
 
@@ -59,4 +62,4 @@ Because paths 1+2 can both fire for one event, dedup guards exist in `registry.a
 - `statistic.py` output is Telegram MarkdownV2: `.`, `!`, `-`, `_`, `(`, `)` are backslash-escaped in the produced strings; broken escaping makes Telegram reject the message.
 - Summaries/profiles are sent as Telegram HTML: every system prompt in `summarize.py` instructs the model to use only `<b>`/`<i>` and never `<br>`/`<p>` (Telegram rejects them) — keep that clause when editing prompts.
 - Joke replies are scheduled via `job_queue` (`jokes.py`) and suppressed at night (00:00–07:30 local), rescheduled to morning.
-- Tests redirect storage by patching module-level constants (`src.history.storage.HISTORY_SAVE_DIRECTORY`, `src.members.registry.HISTORY_MEMBERS_DIRECTORY`, ...) to temp dirs; integration tests in `tests/test_integration.py` use real `telegram.Message/Chat/User` objects and real files, unit tests mock the storage layer.
+- Tests redirect storage by patching module-level constants (`sumi.history.storage.HISTORY_SAVE_DIRECTORY`, `sumi.members.registry.HISTORY_MEMBERS_DIRECTORY`, ...) to temp dirs; integration tests in `tests/test_integration.py` use real `telegram.Message/Chat/User` objects and real files, unit tests mock the storage layer.

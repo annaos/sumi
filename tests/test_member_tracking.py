@@ -16,10 +16,10 @@ from telegram import (
     User,
 )
 
-import src.members.registry as member
-import src.members.events as membership
-from src.handlers.member_handlers import chat_member_update
-from src.members.reconcile import reconcile_members
+import sumi.members.registry as member
+import sumi.members.events as membership
+from sumi.handlers.member_handlers import chat_member_update
+from sumi.members.reconcile import reconcile_members
 
 CHAT_ID = -123
 
@@ -34,8 +34,8 @@ class MembersDirectoryTestCase(unittest.IsolatedAsyncioTestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.members_dir = tmp.name
-        for target in ("src.members.registry.HISTORY_MEMBERS_DIRECTORY",
-                       "src.members.events.HISTORY_MEMBERS_DIRECTORY"):
+        for target in ("sumi.members.registry.HISTORY_MEMBERS_DIRECTORY",
+                       "sumi.members.events.HISTORY_MEMBERS_DIRECTORY"):
             patcher = patch(target, self.members_dir)
             patcher.start()
             self.addCleanup(patcher.stop)

@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock
 from datetime import datetime, timedelta
 
-from src.utils import (
+from sumi.utils import (
     get_boundary,
     get_point,
     get_poll_options,
@@ -10,7 +10,7 @@ from src.utils import (
     get_time_delta,
     _divide_args,
 )
-from src.config import STATISTIC_HOURS
+from sumi.config import STATISTIC_HOURS
 
 
 class GetBoundaryTestCase(unittest.TestCase):

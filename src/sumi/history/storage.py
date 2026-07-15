@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 
-from src.config import HISTORY_SAVE_DIRECTORY
+from sumi.config import HISTORY_SAVE_DIRECTORY
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import src.history.storage as storage
+import sumi.history.storage as storage
 
 CHAT_ID = -123
 
@@ -26,7 +26,7 @@ class StorageTestCase(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.history_dir = tmp.name
-        patcher = patch("src.history.storage.HISTORY_SAVE_DIRECTORY", self.history_dir)
+        patcher = patch("sumi.history.storage.HISTORY_SAVE_DIRECTORY", self.history_dir)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.chat_dir = os.path.join(self.history_dir, "chat_%d" % CHAT_ID)

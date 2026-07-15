@@ -2,12 +2,12 @@ import os
 import subprocess
 
 # Make sure to add this directory to .gitignore"
-POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "polls"))
-HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "chats_history"))
-HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "members_history"))
-AI_USAGE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "ai_usage"))
-REACTION_TARGETS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "reaction_targets"))
-JOKE_TARGETS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "saved_data", "joke_targets"))
+POLL_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "polls"))
+HISTORY_SAVE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "chats_history"))
+HISTORY_MEMBERS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "members_history"))
+AI_USAGE_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "ai_usage"))
+REACTION_TARGETS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "reaction_targets"))
+JOKE_TARGETS_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "saved_data", "joke_targets"))
 
 SUMMARY_HOURS_LIMIT = 5
 

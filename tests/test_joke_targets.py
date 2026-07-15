@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from telegram import User
 
-import src.joke_targets as joke_targets
+import sumi.joke_targets as joke_targets
 
 CHAT_ID = -123
 
@@ -18,7 +18,7 @@ class JokeTargetsTestCase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        patcher = patch("src.joke_targets.JOKE_TARGETS_DIRECTORY", tmp.name)
+        patcher = patch("sumi.joke_targets.JOKE_TARGETS_DIRECTORY", tmp.name)
         patcher.start()
         self.addCleanup(patcher.stop)
 

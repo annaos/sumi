@@ -4,9 +4,9 @@ from datetime import datetime
 from telegram import ChatMember, ChatMemberUpdated, Update
 from telegram.ext import CallbackContext
 
-import src.members.registry as member
-from src.members.events import add_entry, get_last_entries
-from src.utils import is_active_membership_chat
+import sumi.members.registry as member
+from sumi.members.events import add_entry, get_last_entries
+from sumi.utils import is_active_membership_chat
 
 logger = logging.getLogger(__name__)
 

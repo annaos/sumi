@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import src.ai_usage as ai_usage
+import sumi.ai_usage as ai_usage
 
 
 class RecordUsageTestCase(unittest.TestCase):
@@ -14,7 +14,7 @@ class RecordUsageTestCase(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.usage_dir = tmp.name
-        patcher = patch("src.ai_usage.AI_USAGE_DIRECTORY", self.usage_dir)
+        patcher = patch("sumi.ai_usage.AI_USAGE_DIRECTORY", self.usage_dir)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -46,7 +46,7 @@ class GetUsageReportTestCase(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.usage_dir = tmp.name
-        patcher = patch("src.ai_usage.AI_USAGE_DIRECTORY", self.usage_dir)
+        patcher = patch("sumi.ai_usage.AI_USAGE_DIRECTORY", self.usage_dir)
         patcher.start()
         self.addCleanup(patcher.stop)
 

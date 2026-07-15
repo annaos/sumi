@@ -5,11 +5,11 @@ from datetime import datetime, timedelta, time
 from telegram import Message
 from telegram.ext import CallbackContext, ContextTypes
 
-from src.ai import ask_ai
-from src.config import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY, AI_MODEL_PRO, NEW_MESSAGE_MINUTES
-from src.joke_targets import is_target
-from src.members.registry import get_sender
-import src.history.read as gch
+from sumi.ai import ask_ai
+from sumi.config import ACTIVE_ANSWER_FREQUENCY, ALL_ANSWER_FREQUENCY, AI_MODEL_PRO, NEW_MESSAGE_MINUTES
+from sumi.joke_targets import is_target
+from sumi.members.registry import get_sender
+import sumi.history.read as gch
 
 logger = logging.getLogger(__name__)
 

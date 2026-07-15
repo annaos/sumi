@@ -5,11 +5,11 @@ from telegram import Update, User
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext
 
-import src.history.read as gch
-from src.config import PROFILE_DAYS
-from src.summarize import profile
-from src.handlers.shared import get_admin_ids, get_user
-from src.utils import get_boundary, is_active_chat
+import sumi.history.read as gch
+from sumi.config import PROFILE_DAYS
+from sumi.summarize import profile
+from sumi.handlers.shared import get_admin_ids, get_user
+from sumi.utils import get_boundary, is_active_chat
 
 logger = logging.getLogger(__name__)
 

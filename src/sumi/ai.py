@@ -2,9 +2,9 @@ import os
 
 import openai
 
-from src.ai_usage import record_usage
-from src.config import AI_MODEL
-from src.utils import get_logger
+from sumi.ai_usage import record_usage
+from sumi.config import AI_MODEL
+from sumi.utils import get_logger
 
 
 def ask_ai(system, promt, handler, model = AI_MODEL):

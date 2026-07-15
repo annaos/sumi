@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from telegram import User
 
-import src.reactions as reactions
+import sumi.reactions as reactions
 
 CHAT_ID = -123
 
@@ -18,7 +18,7 @@ class ReactionTargetsTestCase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        patcher = patch("src.reactions.REACTION_TARGETS_DIRECTORY", tmp.name)
+        patcher = patch("sumi.reactions.REACTION_TARGETS_DIRECTORY", tmp.name)
         patcher.start()
         self.addCleanup(patcher.stop)
 
