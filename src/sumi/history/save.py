@@ -16,6 +16,7 @@ def save_message(message: Message, is_edited: bool):
         "sender_id": message.from_user.id,
         "sender": message.from_user.full_name,
         "reply_to": message.reply_to_message.message_id if message.reply_to_message is not None else None,
+        "message_thread_id": message.message_thread_id if message.is_topic_message else None,
         "message": message_text
     }
 

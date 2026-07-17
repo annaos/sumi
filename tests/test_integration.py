@@ -17,6 +17,7 @@ from sumi.history.read import (
     get_chat_list,
     updateLastCall,
 )
+from sumi.handlers.shared import filter_history_by_topic
 from sumi.statistic import create_statistic
 
 CHAT_ID = -123
@@ -101,6 +102,55 @@ class SaveAndReadRoundTripTestCase(HistoryDirectoryTestCase):
 
         chain = get_message_history_by_message(third)
         self.assertEqual(["Вопрос", "Ответ", "Уточнение"], [m["message"] for m in chain])
+
+
+def _tg_forum_message(message_id, text, thread_id=None, sender_id=1, sender_name="Anna"):
+    return Message(
+        message_id=message_id,
+        date=datetime.now(),
+        chat=Chat(id=CHAT_ID, type=Chat.SUPERGROUP, title="Test Chat", is_forum=True),
+        from_user=User(id=sender_id, first_name=sender_name, is_bot=False),
+        text=text,
+        message_thread_id=thread_id,
+        is_topic_message=thread_id is not None,
+    )
+
+
+class TopicFilterTestCase(HistoryDirectoryTestCase):
+
+    def test_thread_id_is_persisted(self):
+        save_message(_tg_forum_message(1, "в теме", thread_id=42), is_edited=False)
+        save_message(_tg_forum_message(2, "в общем"), is_edited=False)
+
+        history = get_chat_history_by_message_id(CHAT_ID, 1)
+        self.assertEqual([42, None], [m["message_thread_id"] for m in history["messages"]])
+
+    def test_filter_keeps_only_command_topic(self):
+        save_message(_tg_forum_message(1, "тема А", thread_id=10), is_edited=False)
+        save_message(_tg_forum_message(2, "тема Б", thread_id=20), is_edited=False)
+        save_message(_tg_forum_message(3, "общий чат"), is_edited=False)
+
+        history = get_chat_history_by_message_id(CHAT_ID, 1)
+        command = _tg_forum_message(99, "/sum", thread_id=10)
+        filter_history_by_topic(history, command)
+        self.assertEqual(["тема А"], [m["message"] for m in history["messages"]])
+
+    def test_filter_in_general_keeps_threadless_messages(self):
+        save_message(_tg_forum_message(1, "тема А", thread_id=10), is_edited=False)
+        save_message(_tg_forum_message(2, "общий чат"), is_edited=False)
+
+        history = get_chat_history_by_message_id(CHAT_ID, 1)
+        command = _tg_forum_message(99, "/sum")  # General topic, no thread id
+        filter_history_by_topic(history, command)
+        self.assertEqual(["общий чат"], [m["message"] for m in history["messages"]])
+
+    def test_filter_is_noop_for_non_forum_chat(self):
+        save_message(_tg_message(1, "one"), is_edited=False)
+        save_message(_tg_message(2, "two"), is_edited=False)
+
+        history = get_chat_history_by_message_id(CHAT_ID, 1)
+        filter_history_by_topic(history, _tg_message(99, "/sum"))
+        self.assertEqual(["one", "two"], [m["message"] for m in history["messages"]])
 
     def test_message_without_saved_history_falls_back_to_itself(self):
         save_message(_tg_message(1, "что-то"), is_edited=False)

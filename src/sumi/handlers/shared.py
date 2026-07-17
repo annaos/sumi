@@ -47,6 +47,21 @@ async def fetch_chat_history(update: Update, context: CallbackContext):
     return chat_history, delta
 
 
+def filter_history_by_topic(chat_history, message: Message):
+    """In forum chats, keep only messages from the topic the command was sent in.
+
+    The General topic (and non-forum chats, and legacy messages saved before the
+    thread id was recorded) map to ``message_thread_id`` == None.
+    """
+    if chat_history is None or not message.chat.is_forum:
+        return chat_history
+    thread_id = message.message_thread_id if message.is_topic_message else None
+    chat_history["messages"] = [
+        m for m in chat_history["messages"] if m.get("message_thread_id") == thread_id
+    ]
+    return chat_history
+
+
 async def get_admin_ids(bot: Bot, chat_id: int):
     cms = await bot.getChatAdministrators(chat_id)
     return [cm.user.id for cm in cms]

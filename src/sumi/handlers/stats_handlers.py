@@ -5,7 +5,7 @@ from telegram.constants import ParseMode
 from telegram.ext import CallbackContext
 
 from sumi.statistic import create_statistic, create_wordle_statistic, create_wordle_green_statistic, create_wordle_color_statistic
-from sumi.handlers.shared import fetch_chat_history, get_admin_ids
+from sumi.handlers.shared import fetch_chat_history, filter_history_by_topic, get_admin_ids
 from sumi.utils import is_active_chat
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ async def stats_handler(update: Update, context: CallbackContext) -> None:
     chat_history, delta = await fetch_chat_history(update, context)
     if chat_history is None:
         return
+    filter_history_by_topic(chat_history, update.message)
 
     stats_text = create_statistic(chat_history, delta)
     logger.info("stats_text: %s", stats_text)

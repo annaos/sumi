@@ -7,7 +7,7 @@ from telegram.ext import CallbackContext
 import sumi.history.read as gch
 from sumi.config import SUMMARY_HOURS_LIMIT
 from sumi.summarize import summarize, create_summarize_header
-from sumi.handlers.shared import fetch_chat_history, get_admin_ids
+from sumi.handlers.shared import fetch_chat_history, filter_history_by_topic, get_admin_ids
 from sumi.utils import is_active_chat, get_point
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ async def prompt_handler(update: Update, context: CallbackContext) -> None:
     chat_history, delta = await fetch_chat_history(update, context)
     if chat_history is None:
         return
+    filter_history_by_topic(chat_history, update.message)
 
     if len(chat_history["messages"]) == 0:
         await update.message.reply_text("No messages found.")
@@ -57,6 +58,7 @@ async def summarize_handler(update: Update, context: CallbackContext) -> None:
     chat_history, delta = await fetch_chat_history(update, context)
     if chat_history is None:
         return
+    filter_history_by_topic(chat_history, update.message)
 
     # time_diff = datetime.now() - datetime.fromisoformat(chat_history["summary_created_at"])
     # if os.getenv('PROD') == "True" and time_diff < timedelta(hours=SUMMARY_HOURS_LIMIT):
