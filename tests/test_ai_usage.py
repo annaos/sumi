@@ -23,21 +23,24 @@ class RecordUsageTestCase(unittest.TestCase):
         with open(path, 'r') as file:
             return json.load(file)
 
-    def test_creates_file_with_handler_entry(self):
-        ai_usage.record_usage("summarize", 100, 20)
-        self.assertEqual({"summarize": {"in_tokens": 100, "out_tokens": 20, "calls": 1}}, self._read())
-
-    def test_accumulates_same_handler_same_day(self):
-        ai_usage.record_usage("summarize", 100, 20)
-        ai_usage.record_usage("summarize", 50, 10)
-        self.assertEqual({"summarize": {"in_tokens": 150, "out_tokens": 30, "calls": 2}}, self._read())
-
-    def test_keeps_separate_handlers(self):
-        ai_usage.record_usage("summarize", 100, 20)
-        ai_usage.record_usage("profile", 5, 1)
+    def test_appends_entry_with_timestamp_and_chat_id(self):
+        ai_usage.record_usage("summarize", -100, 100, 20)
         data = self._read()
-        self.assertEqual({"in_tokens": 100, "out_tokens": 20, "calls": 1}, data["summarize"])
-        self.assertEqual({"in_tokens": 5, "out_tokens": 1, "calls": 1}, data["profile"])
+        self.assertEqual(1, len(data))
+        entry = data[0]
+        self.assertEqual("summarize", entry["handler"])
+        self.assertEqual(-100, entry["chat_id"])
+        self.assertEqual(100, entry["in_tokens"])
+        self.assertEqual(20, entry["out_tokens"])
+        self.assertIn("timestamp", entry)
+        datetime.fromisoformat(entry["timestamp"])
+
+    def test_appends_one_entry_per_call(self):
+        ai_usage.record_usage("summarize", -100, 100, 20)
+        ai_usage.record_usage("summarize", -200, 50, 10)
+        data = self._read()
+        self.assertEqual(2, len(data))
+        self.assertEqual([-100, -200], [entry["chat_id"] for entry in data])
 
 
 class GetUsageReportTestCase(unittest.TestCase):
@@ -55,20 +58,37 @@ class GetUsageReportTestCase(unittest.TestCase):
         with open(path, 'w') as file:
             json.dump(data, file)
 
+    def _entry(self, handler, in_tokens, out_tokens, when=None, chat_id=-100):
+        when = when or datetime.now()
+        return {"timestamp": when.isoformat(), "handler": handler,
+                "chat_id": chat_id, "in_tokens": in_tokens, "out_tokens": out_tokens}
+
     def test_aggregates_across_days_in_range(self):
         today = datetime.now()
-        self._write(today, {"summarize": {"in_tokens": 100, "out_tokens": 20, "calls": 1}})
-        self._write(today - timedelta(days=1), {"summarize": {"in_tokens": 50, "out_tokens": 10, "calls": 1}})
+        yesterday = today - timedelta(days=1)
+        self._write(today, [self._entry("summarize", 100, 20)])
+        self._write(yesterday, [self._entry("summarize", 50, 10, when=yesterday)])
 
-        report = ai_usage.get_usage_report(timedelta(days=1))
+        report = ai_usage.get_usage_report(timedelta(days=2))
         self.assertEqual({"in_tokens": 150, "out_tokens": 30, "calls": 2}, report["summarize"])
 
-    def test_ignores_days_outside_range(self):
+    def test_ignores_entries_outside_range(self):
         today = datetime.now()
-        self._write(today, {"summarize": {"in_tokens": 100, "out_tokens": 20, "calls": 1}})
-        self._write(today - timedelta(days=5), {"summarize": {"in_tokens": 999, "out_tokens": 999, "calls": 99}})
+        old = today - timedelta(days=5)
+        self._write(today, [self._entry("summarize", 100, 20)])
+        self._write(old, [self._entry("summarize", 999, 999, when=old)])
 
         report = ai_usage.get_usage_report(timedelta(days=1))
+        self.assertEqual({"in_tokens": 100, "out_tokens": 20, "calls": 1}, report["summarize"])
+
+    def test_filters_by_timestamp_within_day(self):
+        now = datetime.now()
+        self._write(now, [
+            self._entry("summarize", 100, 20, when=now - timedelta(minutes=30)),
+            self._entry("summarize", 999, 999, when=now - timedelta(hours=5)),
+        ])
+
+        report = ai_usage.get_usage_report(timedelta(hours=1))
         self.assertEqual({"in_tokens": 100, "out_tokens": 20, "calls": 1}, report["summarize"])
 
     def test_empty_when_no_files(self):
@@ -76,10 +96,11 @@ class GetUsageReportTestCase(unittest.TestCase):
 
     def test_keeps_handlers_separate_across_days(self):
         today = datetime.now()
-        self._write(today, {"summarize": {"in_tokens": 100, "out_tokens": 20, "calls": 1}})
-        self._write(today - timedelta(days=1), {"profile": {"in_tokens": 5, "out_tokens": 1, "calls": 1}})
+        yesterday = today - timedelta(days=1)
+        self._write(today, [self._entry("summarize", 100, 20)])
+        self._write(yesterday, [self._entry("profile", 5, 1, when=yesterday)])
 
-        report = ai_usage.get_usage_report(timedelta(days=1))
+        report = ai_usage.get_usage_report(timedelta(days=2))
         self.assertEqual({"in_tokens": 100, "out_tokens": 20, "calls": 1}, report["summarize"])
         self.assertEqual({"in_tokens": 5, "out_tokens": 1, "calls": 1}, report["profile"])
 

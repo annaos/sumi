@@ -22,7 +22,7 @@ JOKE_RULES = """
 """
 
 
-def generate_joke_message(user, message: str):
+def generate_joke_message(user, message: str, chat_id):
     sender = get_sender(user)
     system = f"""
 Ты — Суми, остроумный участник группового чата. Тебе дадут сообщение участника по имени {sender}.
@@ -30,12 +30,12 @@ def generate_joke_message(user, message: str):
 - Шути по сути сообщения, а не общими фразами. Можно по-злому подколоть {sender}.
 {JOKE_RULES}"""
 
-    completion = ask_ai(system, message, "joke", AI_MODEL_PRO)
+    completion = ask_ai(system, message, "joke", chat_id, AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 
 
-def generate_chain_joke_message(messages_history):
+def generate_chain_joke_message(messages_history, chat_id):
     system = f"""
 Ты — Суми, остроумный участник группового чата. Тебе дадут цепочку сообщений, по одному в строке, в формате «отправитель: сообщение».
 Ответь на эту беседу короткой шуткой:
@@ -47,7 +47,7 @@ def generate_chain_joke_message(messages_history):
         if message != None:
             messages += "%s: %s \n" % (message["sender"], message["message"])
 
-    completion = ask_ai(system, messages, "joke_chain", AI_MODEL_PRO)
+    completion = ask_ai(system, messages, "joke_chain", chat_id, AI_MODEL_PRO)
 
     return completion.choices[0].message.content
 
@@ -58,7 +58,7 @@ def answer_lucky(message: Message, is_edited: bool):
     is_lucky_message = random.random() < ALL_ANSWER_FREQUENCY
     is_target_message = is_target(message.chat_id, message.from_user.id) and random.random() < ACTIVE_ANSWER_FREQUENCY
     if is_lucky_message or is_target_message:
-        return generate_joke_message(message.from_user, message.text if message.text else message.caption)
+        return generate_chain_joke_message(gch.get_message_history_by_message(message), message.chat_id)
     return None
 
 
@@ -77,7 +77,7 @@ def new_delay_message(chat_id, message: Message, context: CallbackContext):
 async def alarm(context: ContextTypes.DEFAULT_TYPE) -> None:
     job = context.job
     message = job.data
-    await context.bot.send_message(job.chat_id, text=generate_chain_joke_message(gch.get_message_history_by_message(message)))
+    await context.bot.send_message(job.chat_id, text=generate_chain_joke_message(gch.get_message_history_by_message(message), job.chat_id))
 
 
 startH = 0

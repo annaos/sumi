@@ -22,7 +22,7 @@ SUMMARY_SYSTEM_PROMPT = f"""
 {CHAT_INPUT_DESCRIPTION}
 Summarize the conversation:
 - Identify the main discussion topics, ordered from most to least discussed.
-- For each topic write one brief paragraph: start with the topic in <b>bold</b>, then capture the essence of the discussion — who argued for what and how it ended (agreement, open question, joke).
+- For each topic write one brief paragraph: start with the topic in <b>bold</b>, then capture the essence of the discussion.
 - Base the summary only on the provided messages, never add facts of your own. Keep the participants' names exactly as written.
 {FORMAT_RULES}"""
 
@@ -69,7 +69,7 @@ def summarize(chat_history, delta, user, point: str = "", prompt: str = ""):
         handler = "summarize"
     logger.info('prompt: %s', system_promt)
 
-    completion = ask_ai(system_promt, messages_prompt, handler)
+    completion = ask_ai(system_promt, messages_prompt, handler, chat_history["chat_id"])
 
     response_content = completion.choices[0].message.content
     metadata = "\n\n---\n\n"
@@ -84,7 +84,7 @@ def profile(chat_history, user, delta, kai: bool):
     system_promt = PROFILE_KAI_SYSTEM_PROMPT % user.full_name if kai else PROFILE_SYSTEM_PROMPT % user.full_name
     handler = "profile_kai" if kai else "profile"
 
-    completion = ask_ai(system_promt, messages_prompt, handler)
+    completion = ask_ai(system_promt, messages_prompt, handler, chat_history["chat_id"])
 
     response_content = completion.choices[0].message.content
     metadata = "\n\n---\n\n"

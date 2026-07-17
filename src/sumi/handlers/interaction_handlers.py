@@ -33,7 +33,7 @@ async def joke_handler(update: Update, context: CallbackContext) -> None:
 
     if not is_edited and mes is not None:
         #answer = generate_joke_message(mes.from_user, mes.text if mes.text else mes.caption)
-        answer = generate_chain_joke_message(gch.get_message_history_by_message(mes))
+        answer = generate_chain_joke_message(gch.get_message_history_by_message(mes), mes.chat_id)
         if answer:
             await mes.reply_text(answer)
             await update.message.delete()

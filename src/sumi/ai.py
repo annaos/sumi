@@ -7,7 +7,7 @@ from sumi.config import AI_MODEL
 from sumi.utils import get_logger
 
 
-def ask_ai(system, promt, handler, model = AI_MODEL):
+def ask_ai(system, promt, handler, chat_id, model = AI_MODEL):
     openai.api_key = os.getenv('OPENAI_TOKEN')
     completion = openai.chat.completions.create(
         model=model,
@@ -19,6 +19,6 @@ def ask_ai(system, promt, handler, model = AI_MODEL):
     logger = get_logger()
     logger.info(completion)
 
-    record_usage(handler, completion.usage.prompt_tokens, completion.usage.completion_tokens)
+    record_usage(handler, chat_id, completion.usage.prompt_tokens, completion.usage.completion_tokens)
 
     return completion
