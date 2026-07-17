@@ -22,8 +22,8 @@ SUMMARY_SYSTEM_PROMPT = f"""
 {CHAT_INPUT_DESCRIPTION}
 Summarize the conversation:
 - Identify the main discussion topics, ordered from most to least discussed.
-- For each topic write one brief paragraph: start with the topic in <b>bold</b>, then capture the essence of the discussion.
-- Base the summary only on the provided messages, never add facts of your own. Keep the participants' names exactly as written.
+- For each topic write one brief paragraph: start with the topic in <b>bold</b>, then capture the essence of the discussion in one short sentence.
+- Base the summary only on the provided messages, never add facts of your own.
 {FORMAT_RULES}"""
 
 POINT_SUMMARY_SYSTEM_PROMPT = f"""
