@@ -1,7 +1,7 @@
 import os
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -18,7 +18,7 @@ from telegram import (
 
 import sumi.members.registry as member
 import sumi.members.events as membership
-from sumi.handlers.member_handlers import chat_member_update
+from sumi.handlers.member_handlers import chat_member_update, members_history_handler
 from sumi.members.reconcile import reconcile_members
 
 CHAT_ID = -123
@@ -134,6 +134,44 @@ class ChatMemberUpdateHandlerTestCase(MembersDirectoryTestCase):
 
         self.assertEqual(1, len(member.get_all_members(CHAT_ID)))
         self.assertEqual([], membership.get_last_entries(CHAT_ID, 10))
+
+
+class MembersHistoryHandlerTestCase(unittest.IsolatedAsyncioTestCase):
+
+    def setUp(self):
+        env = patch.dict(os.environ, {"ACTIVE_MEMBERSHIP_CHAT_IDS": str(CHAT_ID)})
+        env.start()
+        self.addCleanup(env.stop)
+
+    async def test_time_argument_filters_old_entries(self):
+        now = datetime.now()
+        history = [
+            {"fullname": "Old", "username": None, "status": "leave",
+             "timestamp": (now - timedelta(days=3)).isoformat()},
+            {"fullname": "Recent", "username": None, "status": "join",
+             "timestamp": (now - timedelta(hours=1)).isoformat()},
+        ]
+        message = SimpleNamespace(chat_id=CHAT_ID, reply_text=AsyncMock())
+        update = SimpleNamespace(effective_message=message, message=message)
+        context = SimpleNamespace(args=["2d"])
+
+        with patch("sumi.handlers.member_handlers.get_last_entries", return_value=history) as get_entries:
+            await members_history_handler(update, context)
+
+        get_entries.assert_called_once_with(CHAT_ID, None)
+        response = message.reply_text.await_args.args[0]
+        self.assertIn("Recent", response)
+        self.assertNotIn("Old", response)
+
+    async def test_missing_time_argument_defaults_to_ten_entries(self):
+        message = SimpleNamespace(chat_id=CHAT_ID, reply_text=AsyncMock())
+        update = SimpleNamespace(effective_message=message, message=message)
+        context = SimpleNamespace(args=[])
+
+        with patch("sumi.handlers.member_handlers.get_last_entries", return_value=[]) as get_entries:
+            await members_history_handler(update, context)
+
+        get_entries.assert_called_once_with(CHAT_ID, 10)
 
 
 class ReconcileMembersTestCase(MembersDirectoryTestCase):

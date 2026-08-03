@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from pytimeparse.timeparse import timeparse
 from telegram import ChatMember, ChatMemberUpdated, Update
 from telegram.ext import CallbackContext
 
@@ -87,8 +88,18 @@ async def members_history_handler(update: Update, context: CallbackContext) -> N
         return
 
     logger.info("Ask members_history_handler with update %s", update)
-    count = int(" ".join(context.args)) if " ".join(context.args).isnumeric() and int(" ".join(context.args)) > 0 else 10
-    history = get_last_entries(chat_id, count)
+    args = " ".join(context.args)
+    seconds = timeparse(args)
+    if seconds is not None and seconds > 0:
+        since = datetime.now() - timedelta(seconds=seconds)
+        history = [
+            entry for entry in get_last_entries(chat_id, None)
+            if datetime.fromisoformat(entry["timestamp"]) >= since
+        ]
+    elif args.isnumeric() and int(args) > 0:
+        history = get_last_entries(chat_id, int(args))
+    else:
+        history = get_last_entries(chat_id, 10)
     msg = ""
     for entry in history:
         name = entry["fullname"] if entry["fullname"] else entry["username"]

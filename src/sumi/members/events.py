@@ -26,8 +26,9 @@ def add_entry(chat_id, user: User, join: bool):
     _write_history_json(chat_id, history)
 
 
-def get_last_entries(chat_id, count: int):
-    return _read_history_json(chat_id)[-count:]
+def get_last_entries(chat_id, count: int | None):
+    history = _read_history_json(chat_id)
+    return history[-count:] if count is not None else history
 
 
 def _is_duplicate(history, data):
