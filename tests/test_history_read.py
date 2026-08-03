@@ -5,7 +5,6 @@ from unittest.mock import patch, Mock
 from sumi.history.read import (
     get_chat_history_by_message_id,
     get_chat_history_by_timestamp,
-    get_chat_history_by_user_id,
     get_message_history_by_message,
 )
 
@@ -60,16 +59,6 @@ class GetChatHistoryTestCase(unittest.TestCase):
         with _patch_storage():
             history = get_chat_history_by_timestamp(-123, "2026-07-13T00:00:00")
         self.assertEqual([], history["messages"])
-
-    def test_by_user_id(self):
-        with _patch_storage():
-            history = get_chat_history_by_user_id(-123, 1, "2026-07-01T00:00:00")
-        self.assertEqual([10, 16], [m["message_id"] for m in history["messages"]])
-
-    def test_by_user_id_respects_timestamp(self):
-        with _patch_storage():
-            history = get_chat_history_by_user_id(-123, 1, "2026-07-11T00:00:00")
-        self.assertEqual([16], [m["message_id"] for m in history["messages"]])
 
 
 class GetMessageHistoryByMessageTestCase(unittest.TestCase):

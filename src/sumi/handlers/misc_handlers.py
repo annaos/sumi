@@ -84,7 +84,7 @@ async def ai_usage_handler(update: Update, context: CallbackContext) -> None:
     if not (update.effective_chat.type == Chat.PRIVATE and update.effective_message.chat_id == int(os.getenv("MY_CHAT_ID"))):
         return
 
-    delta = get_boundary(context.args, timedelta(days=1))
+    (_, delta) = get_boundary(None, context.args, timedelta(days=1))
     usage = get_usage_report(delta)
     if not usage:
         await update.message.reply_text("No AI usage recorded for this period.")

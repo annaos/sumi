@@ -1,12 +1,13 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from telegram import Bot, Message, MessageEntity, Update, User
 from telegram.ext import CallbackContext
 
+from sumi.config import STATISTIC_HOURS
 import sumi.history.read as gch
 from sumi.members.registry import get_member_by_name
-from sumi.utils import get_statistic_boundary, get_time_delta
+from sumi.utils import get_boundary, get_time_delta
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def get_user(message: Message) -> User|None:
 
 async def fetch_chat_history(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
-    (message_id, delta) = get_statistic_boundary(update.message.reply_to_message, context.args)
+    (message_id, delta) = get_boundary(update.message.reply_to_message, context.args, timedelta(hours=STATISTIC_HOURS))
 
     try:
         if message_id is not None:

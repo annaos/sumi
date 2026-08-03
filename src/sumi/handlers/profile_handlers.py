@@ -9,7 +9,7 @@ import sumi.history.read as gch
 from sumi.config import PROFILE_DAYS
 from sumi.summarize import profile
 from sumi.handlers.shared import get_admin_ids, get_user
-from sumi.utils import get_boundary, is_active_chat
+from sumi.utils import get_boundary, is_active_chat, get_time_delta
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +35,16 @@ async def base_profile_handler(kai: bool, update: Update, context: CallbackConte
         await update.message.reply_text("No user found to profile.")
         return
 
-    delta = get_boundary(context.args, timedelta(days=PROFILE_DAYS))
+    (message_id, delta) = get_boundary(update.message.reply_to_message, context.args, timedelta(days=PROFILE_DAYS))
 
-    timestamp = (datetime.now() - delta).isoformat()
-    chat_history = gch.get_chat_history_by_user_id(chat_id, user.id, timestamp)
+    if message_id is not None:
+        chat_history = gch.get_chat_history_by_message_id(chat_id, message_id)
+        delta = get_time_delta(chat_history)
+    else:
+        timestamp = (datetime.now() - delta).isoformat()
+        chat_history = gch.get_chat_history_by_timestamp(chat_id, timestamp)
+
+    chat_history = gch.filter_chat_history_by_user_id(chat_history, user.id)
 
     if len(chat_history["messages"]) == 0:
         await update.message.reply_text("No messages found to profile.")

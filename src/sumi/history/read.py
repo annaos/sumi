@@ -33,9 +33,8 @@ def get_chat_history_by_timestamp(chat_id: int, timestamp: str):
     return chat_history
 
 
-def get_chat_history_by_user_id(chat_id: int, user_id: int, timestamp: str):
-    chat_history = storage.load_history(chat_id)
-    chat_history["messages"] = [x for x in chat_history["messages"] if x["timestamp"] >= timestamp and x["sender_id"] == user_id]
+def filter_chat_history_by_user_id(chat_history, user_id: int):
+    chat_history["messages"] = [x for x in chat_history["messages"] if x["sender_id"] == user_id]
     return chat_history
 
 

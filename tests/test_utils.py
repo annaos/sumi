@@ -6,7 +6,6 @@ from sumi.utils import (
     get_boundary,
     get_point,
     get_poll_options,
-    get_statistic_boundary,
     get_time_delta,
     _divide_args,
 )
@@ -18,28 +17,51 @@ class GetBoundaryTestCase(unittest.TestCase):
     def test_hours(self):
         for hours in [2, 4, 16]:
             with self.subTest(hours=hours):
-                self.assertEqual(timedelta(hours=hours), get_boundary(['%dh' % hours]))
+                self.assertEqual((None, timedelta(hours=hours)), get_boundary(None, ['%dh' % hours]))
 
     def test_minutes(self):
         for minutes in [2, 30, 90]:
             with self.subTest(minutes=minutes):
-                self.assertEqual(timedelta(minutes=minutes), get_boundary(['%dm' % minutes]))
+                self.assertEqual((None, timedelta(minutes=minutes)), get_boundary(None, ['%dm' % minutes]))
 
     def test_days(self):
-        self.assertEqual(timedelta(days=7), get_boundary(['7d']))
+        self.assertEqual((None, timedelta(days=7)), get_boundary(None, ['7d']))
 
     def test_time_after_point(self):
-        self.assertEqual(timedelta(hours=3), get_boundary(['погода', '3h']))
+        self.assertEqual((None, timedelta(hours=3)), get_boundary(None, ['погода', '3h']))
 
     def test_invalid_falls_back_to_default(self):
-        self.assertEqual(timedelta(hours=STATISTIC_HOURS), get_boundary(['bla']))
+        self.assertEqual(
+            (None, timedelta(hours=STATISTIC_HOURS)),
+            get_boundary(None, ['bla']),
+        )
 
     def test_empty_falls_back_to_default(self):
-        self.assertEqual(timedelta(hours=STATISTIC_HOURS), get_boundary([]))
+        self.assertEqual(
+            (None, timedelta(hours=STATISTIC_HOURS)),
+            get_boundary(None, []),
+        )
 
     def test_custom_default(self):
         default = timedelta(days=1)
-        self.assertEqual(default, get_boundary([], default))
+        self.assertEqual((None, default), get_boundary(None, [], default))
+
+    def test_reply_to_regular_message(self):
+        reply = Mock(message_id=42, message_thread_id=1)
+        self.assertEqual((42, None), get_boundary(reply, []))
+
+    def test_args_override_reply_to_regular_message(self):
+        reply = Mock(message_id=42, message_thread_id=1)
+        self.assertEqual((None, timedelta(hours=2)), get_boundary(reply, ['2h']))
+
+    def test_invalid_args_fall_back_to_reply(self):
+        reply = Mock(message_id=42, message_thread_id=1)
+        self.assertEqual((42, None), get_boundary(reply, ['bla']))
+
+    def test_thread_root_is_not_a_message_boundary(self):
+        reply = Mock(message_id=42, message_thread_id=42)
+        default = timedelta(days=1)
+        self.assertEqual((None, default), get_boundary(reply, [], default))
 
 
 class DivideArgsTestCase(unittest.TestCase):
@@ -82,23 +104,6 @@ class GetPollOptionsTestCase(unittest.TestCase):
 
     def test_empty(self):
         self.assertEqual([], get_poll_options(''))
-
-
-class GetStatisticBoundaryTestCase(unittest.TestCase):
-
-    def test_reply_to_regular_message(self):
-        reply = Mock(message_id=42, message_thread_id=1)
-        self.assertEqual((42, None), get_statistic_boundary(reply, []))
-
-    def test_reply_to_thread_root_uses_args(self):
-        reply = Mock(message_id=42, message_thread_id=42)
-        self.assertEqual((None, timedelta(hours=2)), get_statistic_boundary(reply, ['2h']))
-
-    def test_no_reply_uses_args(self):
-        self.assertEqual((None, timedelta(hours=2)), get_statistic_boundary(None, ['2h']))
-
-    def test_no_reply_no_args_uses_default(self):
-        self.assertEqual((None, timedelta(hours=STATISTIC_HOURS)), get_statistic_boundary(None, []))
 
 
 class GetTimeDeltaTestCase(unittest.TestCase):

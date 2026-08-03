@@ -12,7 +12,6 @@ from sumi.history.save import save_message, save_private_sender, get_private_sen
 from sumi.history.read import (
     get_chat_history_by_message_id,
     get_chat_history_by_timestamp,
-    get_chat_history_by_user_id,
     get_message_history_by_message,
     get_chat_list,
     updateLastCall,
@@ -75,15 +74,6 @@ class SaveAndReadRoundTripTestCase(HistoryDirectoryTestCase):
 
         history = get_chat_history_by_timestamp(CHAT_ID, cutoff)
         self.assertEqual(["new"], [m["message"] for m in history["messages"]])
-
-    def test_filter_by_user_id(self):
-        save_message(_tg_message(1, "от Анны", sender_id=1), is_edited=False)
-        save_message(_tg_message(2, "от Свена", sender_id=2, sender_name="Sven"), is_edited=False)
-        save_message(_tg_message(3, "снова Анна", sender_id=1), is_edited=False)
-
-        long_ago = (datetime.now() - timedelta(days=1)).isoformat()
-        history = get_chat_history_by_user_id(CHAT_ID, 1, long_ago)
-        self.assertEqual([1, 3], [m["message_id"] for m in history["messages"]])
 
     def test_edited_message_replaces_original_text(self):
         save_message(_tg_message(1, "опечтка"), is_edited=False)
