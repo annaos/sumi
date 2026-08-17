@@ -1,16 +1,29 @@
 import logging
 import os
 
-from telegram import Update, Chat
+from telegram import Update, Chat, Message, MessageEntity
 from telegram.ext import CallbackContext
 
-from sumi.jokes import answer_lucky
+from sumi.jokes import answer_lucky, generate_chain_joke_message
 from sumi.jokes import new_delay_message
 from sumi.history.save import save_message, save_private_sender, resolve_reply_target_id
+import sumi.history.read as gch
 from sumi.reactions import react_lucky
 from sumi.utils import is_active_joke_chat
 
 logger = logging.getLogger(__name__)
+
+
+def _is_bot_addressed(message: Message, bot) -> bool:
+    reply = message.reply_to_message
+    if reply is not None and reply.from_user is not None and reply.from_user.id == bot.id:
+        return True
+    for entity in message.entities:
+        if entity.type == MessageEntity.MENTION:
+            mention = message.text[entity.offset:entity.offset + entity.length]
+            if mention.lower() == f"@{bot.username}".lower():
+                return True
+    return False
 
 
 async def message_handler(update: Update, context: CallbackContext) -> None:
@@ -27,8 +40,11 @@ async def message_handler(update: Update, context: CallbackContext) -> None:
         id = resolve_reply_target_id(reply_to_message)
         if id is not None:
             await context.bot.send_message(id, text=message.text)
-
-    if is_active_joke_chat(update.effective_message.chat_id) and not is_edited:
+    elif not is_edited and _is_bot_addressed(message, context.bot):
+        answer = generate_chain_joke_message(gch.get_message_history_by_message(message), message.chat_id)
+        if answer:
+            await update.message.reply_text(answer)
+    elif is_active_joke_chat(update.effective_message.chat_id) and not is_edited:
         await react_lucky(message)
 
         answer = answer_lucky(message, is_edited)
